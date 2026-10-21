@@ -1194,6 +1194,13 @@
   }
 
   // ================= 6. PRACTICE EXAM =================
+  function formatTimer(sec) {
+    const s = sec || 0;
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const remaining = (s % 60).toString().padStart(2, '0');
+    return `${m}:${remaining}`;
+  }
+
   function startExamTimer() {
     if (state.exam.timerRunning) return;
     state.exam.timerRunning = true;
@@ -1201,9 +1208,7 @@
       state.exam.timerSeconds++;
       const timerDisplay = document.getElementById('examTimerDisplay');
       if (timerDisplay) {
-        const m = Math.floor(state.exam.timerSeconds / 60).toString().padStart(2, '0');
-        const s = (state.exam.timerSeconds % 60).toString().padStart(2, '0');
-        timerDisplay.textContent = `${m}:${s}`;
+        timerDisplay.textContent = formatTimer(state.exam.timerSeconds);
       }
     }, 1000);
   }
@@ -1326,6 +1331,191 @@
       `;
     }).join('');
 
+    let mainExamContent = '';
+    if (totalQ === 0) {
+      mainExamContent = `
+        <div class="card" style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-secondary); border-radius: 16px;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+          <h3 style="margin-bottom: 0.5rem;">ไม่มีข้อสอบที่ตรงกับเงื่อนไขในขณะนี้</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            ${state.exam.filterSection === 'wrong' 
+              ? 'ยินดีด้วย! คุณยังไม่มีข้อที่ตอบผิดในหัวข้อนี้ หรือทำถูกต้องทั้งหมดแล้ว' 
+              : 'กรุณาเลือกหัวข้ออื่นจากเมนูด้านบน'}
+          </p>
+          <button class="btn btn-primary" onclick="window.app.resetExamFilters()">
+            แสดงข้อสอบทั้งหมด
+          </button>
+        </div>
+      `;
+    } else {
+      const currentSelected = state.exam.userAnswers[currentQ.id];
+      const isCurrentAnswered = currentSelected !== undefined;
+      const isFlagged = state.exam.flaggedSet.has(currentQ.id);
+
+      mainExamContent = `
+        <div class="exam-layout">
+          <!-- Question Presentation Card -->
+          <div class="exam-question-card">
+            <div class="q-header-meta">
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="badge ${
+                  currentQ.section === 'vocab' ? 'badge-vocab' : currentQ.section === 'grammar' ? 'badge-grammar' : 'badge-reading'
+                }">
+                  ${currentQ.section.toUpperCase()}
+                </span>
+                <span class="badge badge-unit">Unit ${currentQ.unit}</span>
+                <span class="topic-exercise-tag">${currentQ.exerciseRef || ''}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button class="btn btn-sm ${isFlagged ? 'btn-primary' : 'btn-outline'}" id="btnFlagQuestion">
+                  ${isFlagged ? '🚩 Flagged' : '🏳️ Flag'}
+                </button>
+                <div class="q-number-pill">ข้อที่ ${state.exam.currentIndex + 1} / ${totalQ}</div>
+              </div>
+            </div>
+
+            <!-- If Reading passage question, show passage excerpt/title -->
+            ${currentQ.passageTitle ? `
+              <div class="passage-context-box">
+                <div style="font-weight: 700; color: var(--reading-accent); margin-bottom: 0.25rem;">
+                  📖 ${currentQ.passageTitle}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                  (อ่านคำถามและเลือกคำตอบที่ถูกต้องที่สุดตามหลักฐานในบทอ่าน)
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="q-text" style="white-space: pre-line;">${currentQ.question}</div>
+
+            <!-- 4 Options A-D -->
+            <div class="exam-options-list">
+              ${currentQ.options.map((opt, optIdx) => {
+                const letter = String.fromCharCode(65 + optIdx);
+                let optClass = '';
+                if (currentSelected === optIdx) optClass += ' selected';
+
+                if (isSubmitted || (isPracticeMode && isCurrentAnswered)) {
+                  if (optIdx === currentQ.correctAnswer) {
+                    optClass += ' opt-correct';
+                  } else if (currentSelected === optIdx) {
+                    optClass += ' opt-wrong';
+                  }
+                }
+
+                return `
+                  <div class="exam-option-item ${optClass}" onclick="window.app.selectExamOption('${currentQ.id}', ${optIdx})">
+                    <div class="opt-letter">${letter}</div>
+                    <div style="font-size: 0.95rem; font-weight: 500;">${opt}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Explanation Box -->
+            <div class="explanation-reveal-box ${isSubmitted || (isPracticeMode && isCurrentAnswered) ? 'open' : ''}">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="color: var(--brand-primary); font-size: 0.95rem;">💡 เฉลยและคำอธิบาย:</strong>
+                <span class="badge ${currentSelected === currentQ.correctAnswer ? 'badge-vocab' : 'badge-exam'}">
+                  ${currentSelected === currentQ.correctAnswer ? 'ถูกต้อง (+1)' : 'ยังไม่ถูกต้อง'}
+                </span>
+              </div>
+              <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem; line-height: 1.5;">
+                ${currentQ.explanationThai}
+              </p>
+              ${currentQ.signalKeywords ? `
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                  <strong>คำใบ้ / คีย์เวิร์ด:</strong> ${currentQ.signalKeywords}
+                </div>
+              ` : ''}
+              ${currentQ.evidenceSentence ? `
+                <div style="font-size: 0.8rem; color: var(--reading-accent); margin-top: 0.25rem;">
+                  <strong>หลักฐานในบทความ:</strong> "${currentQ.evidenceSentence}"
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Next / Prev Nav Buttons -->
+            <div class="q-nav-buttons">
+              <button class="btn btn-outline" id="btnExamPrev" ${state.exam.currentIndex === 0 ? 'disabled' : ''}>
+                ← ข้อก่อนหน้า
+              </button>
+              <div style="display: flex; gap: 0.5rem;">
+                ${!isSubmitted ? `
+                  <button class="btn btn-primary" id="btnExamSubmitModal" style="background: var(--exam-accent);">
+                    ส่งข้อสอบ (Submit)
+                  </button>
+                ` : `
+                  <button class="btn btn-outline" onclick="window.app.retakeExam()">
+                    🔄 ทำข้อสอบใหม่
+                  </button>
+                `}
+                <button class="btn btn-primary" id="btnExamNext" ${state.exam.currentIndex === totalQ - 1 ? 'disabled' : ''}>
+                  ข้อถัดไป →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Side: Question Navigator Grid -->
+          <div class="exam-nav-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h4 style="font-size: 1rem;">Question Navigator</h4>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${answeredInScope}/${totalQ} ข้อ</span>
+            </div>
+
+            <div class="nav-grid-40">
+              ${questions.map((q, idx) => {
+                const isAns = state.exam.userAnswers[q.id] !== undefined;
+                const isCur = idx === state.exam.currentIndex;
+                const isFlg = state.exam.flaggedSet.has(q.id);
+
+                let dotClass = '';
+                if (isCur) dotClass += ' current';
+                if (isFlg) dotClass += ' flagged';
+                if (isSubmitted) {
+                  const userChoice = state.exam.userAnswers[q.id];
+                  if (userChoice === q.correctAnswer) dotClass += ' graded-correct';
+                  else dotClass += ' graded-wrong';
+                } else if (isAns) {
+                  dotClass += ' answered';
+                }
+
+                return `
+                  <div class="q-nav-dot ${dotClass}" onclick="window.app.jumpToQuestion(${idx})">
+                    ${idx + 1}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Legend -->
+            <div class="exam-nav-legend">
+              <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> ตอบแล้ว</div>
+              <div class="legend-item"><div class="legend-dot" style="background: var(--bg-tertiary); border: 1px solid var(--border-medium);"></div> ยังไม่ตอบ</div>
+              <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div> ติดธงไว้</div>
+              ${isSubmitted ? `
+                <div class="legend-item"><div class="legend-dot" style="background: var(--vocab-accent);"></div> ถูก</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> ผิด</div>
+              ` : ''}
+            </div>
+
+            <!-- Submit Button in Navigator -->
+            ${!isSubmitted ? `
+              <button class="btn btn-primary" id="btnExamSubmitNav" style="width: 100%; background: var(--exam-accent);">
+                ส่งข้อสอบและตรวจผล
+              </button>
+            ` : `
+              <button class="btn btn-outline" id="btnFilterWrongOnly" style="width: 100%;">
+                ${state.exam.filterSection === 'wrong' ? 'แสดงทุกข้อ' : 'ฝึกเฉพาะข้อที่ตอบผิด 🎯'}
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
     container.innerHTML = `
       <!-- Topic Hub / Exam Center -->
       <div class="exam-topics-container">
@@ -1415,189 +1605,7 @@
       </div>
 
       <!-- Main Exam Content Area -->
-      ${totalQ === 0 ? `
-        <div class="card" style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-secondary); border-radius: 16px;">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
-          <h3 style="margin-bottom: 0.5rem;">ไม่มีข้อสอบที่ตรงกับเงื่อนไขในขณะนี้</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-            ${state.exam.filterSection === 'wrong' 
-              ? 'ยินดีด้วย! คุณยังไม่มีข้อที่ตอบผิดในหัวข้อนี้ หรือทำถูกต้องทั้งหมดแล้ว' 
-              : 'กรุณาเลือกหัวข้ออื่นจากเมนูด้านบน'}
-          </p>
-          <button class="btn btn-primary" onclick="window.app.resetExamFilters()">
-            แสดงข้อสอบทั้งหมด
-          </button>
-        </div>
-      ` : `
-        <div class="exam-layout">
-          <!-- Question Presentation Card -->
-          <div class="exam-question-card">
-            <div class="q-header-meta">
-              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                <span class="badge ${
-                  currentQ.section === 'vocab' ? 'badge-vocab' : currentQ.section === 'grammar' ? 'badge-grammar' : 'badge-reading'
-                }">
-                  ${currentQ.section.toUpperCase()}
-                </span>
-                <span class="badge badge-unit">Unit ${currentQ.unit}</span>
-                <span class="topic-exercise-tag">${currentQ.exerciseRef || ''}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <button class="btn btn-sm ${state.exam.flaggedSet.has(currentQ.id) ? 'btn-primary' : 'btn-outline'}" id="btnFlagQuestion">
-                  ${state.exam.flaggedSet.has(currentQ.id) ? '🚩 Flagged' : '🏳️ Flag'}
-                </button>
-                <div class="q-number-pill">ข้อที่ ${state.exam.currentIndex + 1} / ${totalQ}</div>
-              </div>
-            </div>
-
-            <!-- If Reading passage question, show passage excerpt/title -->
-            ${currentQ.passageTitle ? `
-              <div class="passage-context-box">
-                <div style="font-weight: 700; color: var(--reading-accent); margin-bottom: 0.25rem;">
-                  📖 ${currentQ.passageTitle}
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">
-                  (อ่านคำถามและเลือกคำตอบที่ถูกต้องที่สุดตามหลักฐานในบทอ่าน)
-                </div>
-              </div>
-            ` : ''}
-
-            <div class="q-text" style="white-space: pre-line;">${currentQ.question}</div>
-
-            <!-- 4 Options A-D -->
-            <div class="exam-options-list">
-              ${currentQ.options.map((opt, optIdx) => {
-                const letter = String.fromCharCode(65 + optIdx);
-                const currentSelected = state.exam.userAnswers[currentQ.id];
-                const isCurrentAnswered = currentSelected !== undefined;
-                let optClass = '';
-                if (currentSelected === optIdx) optClass += ' selected';
-
-                if (isSubmitted || (isPracticeMode && isCurrentAnswered)) {
-                  if (optIdx === currentQ.correctAnswer) {
-                    optClass += ' opt-correct';
-                  } else if (currentSelected === optIdx) {
-                    optClass += ' opt-wrong';
-                  }
-                }
-
-                return `
-                  <div class="exam-option-item ${optClass}" onclick="window.app.selectExamOption('${currentQ.id}', ${optIdx})">
-                    <div class="opt-letter">${letter}</div>
-                    <div style="font-size: 0.95rem; font-weight: 500;">${opt}</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-            <!-- Explanation Box -->
-            ${(() => {
-              const currentSelected = state.exam.userAnswers[currentQ.id];
-              const isCurrentAnswered = currentSelected !== undefined;
-              return `
-                <div class="explanation-reveal-box ${isSubmitted || (isPracticeMode && isCurrentAnswered) ? 'open' : ''}">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <strong style="color: var(--brand-primary); font-size: 0.95rem;">💡 เฉลยและคำอธิบาย:</strong>
-                    <span class="badge ${currentSelected === currentQ.correctAnswer ? 'badge-vocab' : 'badge-exam'}">
-                      ${currentSelected === currentQ.correctAnswer ? 'ถูกต้อง (+1)' : 'ยังไม่ถูกต้อง'}
-                    </span>
-                  </div>
-                  <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem; line-height: 1.5;">
-                    ${currentQ.explanationThai}
-                  </p>
-                  ${currentQ.signalKeywords ? `
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
-                      <strong>คำใบ้ / คีย์เวิร์ด:</strong> ${currentQ.signalKeywords}
-                    </div>
-                  ` : ''}
-                  ${currentQ.evidenceSentence ? `
-                    <div style="font-size: 0.8rem; color: var(--reading-accent); margin-top: 0.25rem;">
-                      <strong>หลักฐานในบทความ:</strong> "${currentQ.evidenceSentence}"
-                    </div>
-                  ` : ''}
-                </div>
-              `;
-            })()}
-
-            <!-- Next / Prev Nav Buttons -->
-            <div class="q-nav-buttons">
-              <button class="btn btn-outline" id="btnExamPrev" ${state.exam.currentIndex === 0 ? 'disabled' : ''}>
-                ← ข้อก่อนหน้า
-              </button>
-              <div style="display: flex; gap: 0.5rem;">
-                ${!isSubmitted ? `
-                  <button class="btn btn-primary" id="btnExamSubmitModal" style="background: var(--exam-accent);">
-                    ส่งข้อสอบ (Submit)
-                  </button>
-                ` : `
-                  <button class="btn btn-outline" onclick="window.app.retakeExam()">
-                    🔄 ทำข้อสอบใหม่
-                  </button>
-                `}
-                <button class="btn btn-primary" id="btnExamNext" ${state.exam.currentIndex === totalQ - 1 ? 'disabled' : ''}>
-                  ข้อถัดไป →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Side: Question Navigator Grid -->
-          <div class="exam-nav-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <h4 style="font-size: 1rem;">Question Navigator</h4>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">${answeredInScope}/${totalQ} ข้อ</span>
-            </div>
-
-            <div class="nav-grid-40">
-              ${questions.map((q, idx) => {
-                const isAns = state.exam.userAnswers[q.id] !== undefined;
-                const isCur = idx === state.exam.currentIndex;
-                const isFlg = state.exam.flaggedSet.has(q.id);
-
-                let dotClass = '';
-                if (isCur) dotClass += ' current';
-                if (isFlg) dotClass += ' flagged';
-                if (isSubmitted) {
-                  const userChoice = state.exam.userAnswers[q.id];
-                  if (userChoice === q.correctAnswer) dotClass += ' graded-correct';
-                  else dotClass += ' graded-wrong';
-                } else if (isAns) {
-                  dotClass += ' answered';
-                }
-
-                return `
-                  <div class="q-nav-dot ${dotClass}" onclick="window.app.jumpToQuestion(${idx})">
-                    ${idx + 1}
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-            <!-- Legend -->
-            <div class="exam-nav-legend">
-              <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> ตอบแล้ว</div>
-              <div class="legend-item"><div class="legend-dot" style="background: var(--bg-tertiary); border: 1px solid var(--border-medium);"></div> ยังไม่ตอบ</div>
-              <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div> ติดธงไว้</div>
-              ${isSubmitted ? `
-                <div class="legend-item"><div class="legend-dot" style="background: var(--vocab-accent);"></div> ถูก</div>
-                <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> ผิด</div>
-              ` : ''}
-            </div>
-
-            <!-- Submit Button in Navigator -->
-            ${!isSubmitted ? `
-              <button class="btn btn-primary" id="btnExamSubmitNav" style="width: 100%; background: var(--exam-accent);">
-                ส่งข้อสอบและตรวจผล
-              </button>
-            ` : `
-              <button class="btn btn-outline" id="btnFilterWrongOnly" style="width: 100%;">
-                ${state.exam.filterSection === 'wrong' ? 'แสดงทุกข้อ' : 'ฝึกเฉพาะข้อที่ตอบผิด 🎯'}
-              </button>
-            `}
-          </div>
-        </div>
-      `}
+      ${mainExamContent}
 
       <!-- Submit Confirmation Modal -->
       <div class="modal-backdrop" id="submitModalBackdrop"></div>
