@@ -76,6 +76,13 @@
     }, 2400);
   }
 
+  function formatMarkdown(text) {
+    if (typeof text !== 'string') return text;
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+  }
+
   function saveStorage() {
     localStorage.setItem('cefr_learned_vocab', JSON.stringify(Array.from(state.vocab.learnedSet)));
     localStorage.setItem('cefr_saved_vocab', JSON.stringify(Array.from(state.vocab.savedSet)));
@@ -734,7 +741,7 @@
                         <tbody>
                           ${item.comparisonTable.rows.map(row => `
                             <tr>
-                              ${row.map(cell => `<td>${cell}</td>`).join('')}
+                              ${row.map(cell => `<td>${formatMarkdown(cell)}</td>`).join('')}
                             </tr>
                           `).join('')}
                         </tbody>
