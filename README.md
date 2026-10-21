@@ -81,29 +81,34 @@ d:/Eng/
 - **Reading Question Keywords:** เทคนิคและกลยุทธ์จัดการคำถาม เช่น *Main Idea, According to the passage, Infer/Imply, Refer to, Closest in meaning, Author's purpose, NOT/EXCEPT*
 - **ฟังก์ชันค้นหาด่วน:** สามารถพิมพ์คำค้นเพื่อดึงเฉพาะคีย์เวิร์ดที่ต้องการทบทวนได้ทันที
 
-### 6. Practice Exam Center (คลังข้อสอบแยกตามหัวข้อและแบบฝึกหัดจริง 17 หัวข้อ รวม 98 ข้อ)
-- **ระบบเลือกทำข้อสอบรายหัวข้อ (Topic & Exercise Selector):**
-  - **Unit 4: At the Workplace (6 หัวข้อ)**
-    1. *Workplace Vocab & Benefits* (Unit 4, Ex 1 & 2)
-    2. *Meeting Language & Phrases* (Unit 4, Ex 3)
-    3. *Phrasal Verbs in Action* (Unit 4, Ex 4 & 5)
-    4. *Future Forms & Work Plans* (Unit 4, Ex 6)
-    5. *Reading: Job Satisfaction* (Unit 4, Ex 7 & 8)
-    6. *Work Conditions & Benefits* (Unit 4, Ex 9 & 10 - Alisa Boonliang)
-  - **Unit 5: Presentation (6 หัวข้อ)**
-    7. *Presentation Signposting* (Unit 5, Ex 1)
-    8. *Presentation Equipment & Advanced Vocab* (Unit 5, Ex 2 & 3)
-    9. *Grammar: So vs. Such* (Unit 5, Ex 4 & 5)
-    10. *Grammar: Discourse Markers* (Unit 5, Ex 6)
-    11. *Reading: Dealing with Nervousness* (Unit 5, Ex 7 & 8)
-    12. *Presentation Do's & Don'ts* (Unit 5, Ex 9 & 10 - Nicole Shaw)
-  - **Unit 6: Communication in Multicultural Contexts (5 หัวข้อ)**
-    13. *High vs. Low Context Cultures* (Unit 6, Ex 1, 2 & 3)
-    14. *Multicultural Workplace & Passage Vocab* (Unit 6, Ex 4 & 9)
-    15. *Grammar: Reported Speech* (Unit 6, Ex 5 & 6)
-    16. *Reading: Different Cultures in Business* (Unit 6, Ex 7 & 8)
-    17. *Global Business Gift-Giving Customs* (Unit 6, Ex 10 & 11 - Rob Hall)
-  - **Full B1–B2 Comprehensive Mock Exam:** โหมดสอบรวมทุกหัวข้อ (98 ข้อ)
+### 6. Practice Exam Center (คลังข้อสอบแยกตามหัวข้อและทักษะ รวม 103 ข้อ)
+- **4 โหมดข้อสอบหลัก (Quick Master Exam):**
+  1. 🌟 **รวมทุกบท ทุกทักษะ (Full B1–B2 Mock Exam):** 103 ข้อ
+  2. 📚 **Vocabulary ของทุกบท (All Units: Vocabulary Master):** 60 ข้อ
+  3. ⚖️ **Grammar ของทุกบท (All Units: Grammar Master):** 28 ข้อ
+  4. 📖 **Reading ของทุกบท (All Units: Reading Comprehension):** 15 ข้อ
+- **ระบบเลือกทำข้อสอบแบบสองชั้น (Unit & Skill Focus Filters):**
+  - **เลือกตามบทเรียน (Filter by Unit):** ทุกบท (103 ข้อ), Unit 4 (37 ข้อ), Unit 5 (33 ข้อ), Unit 6 (33 ข้อ)
+  - **เลือกตามทักษะ (Filter by Skill):** ทุกทักษะ, 📚 Vocabulary, ⚖️ Grammar, 📖 Reading
+- **หัวข้อแบบฝึกหัดจริงแยกตามบท (Unit 4, 5, 6 Topics):**
+  - **Unit 4: At the Workplace (37 ข้อ)**
+    - *Unit 4: รวมทุกหัวข้อ* (37 ข้อ)
+    - *Unit 4: Vocabulary Complete* (Ex 1, 2, 3, 9, 10 - 20 ข้อ)
+    - *Unit 4: Grammar Complete* (Ex 4, 5, 6 - 12 ข้อ)
+    - *Unit 4: Reading Comprehension* (Job Satisfaction - 5 ข้อ)
+    - พร้อมแบบฝึกหัดย่อย: *Workplace Vocab & Benefits*, *Meeting Language*, *Phrasal Verbs*, *Future Forms*, *Work Conditions*
+  - **Unit 5: Presentation (33 ข้อ)**
+    - *Unit 5: รวมทุกหัวข้อ* (33 ข้อ)
+    - *Unit 5: Vocabulary Complete* (Ex 1, 2, 3, 9, 10 - 18 ข้อ)
+    - *Unit 5: Grammar Complete* (So/Such, Discourse Markers - 10 ข้อ)
+    - *Unit 5: Reading Comprehension* (Dealing with Nervousness - 5 ข้อ)
+    - พร้อมแบบฝึกหัดย่อย: *Signposting*, *Equipment*, *So vs. Such*, *Discourse Markers*, *Presentation Do's & Don'ts*
+  - **Unit 6: Communication in Multicultural Contexts (33 ข้อ)**
+    - *Unit 6: รวมทุกหัวข้อ* (33 ข้อ)
+    - *Unit 6: Vocabulary Complete* (Ex 1, 2, 3, 4, 9, 10, 11 - 22 ข้อ)
+    - *Unit 6: Grammar Complete* (Reported Speech - 6 ข้อ)
+    - *Unit 6: Reading Comprehension* (Different Cultures in Business - 5 ข้อ)
+    - พร้อมแบบฝึกหัดย่อย: *High vs. Low Context*, *Multicultural Vocab*, *Reported Speech*, *Gift-Giving Customs*
 - **2 โหมดการทดสอบ:**
   - **Practice Mode:** แสดงคำอธิบายภาษาไทย คีย์เวิร์ด และประโยคหลักฐานทันทีเมื่อตอบ
   - **Exam Mode:** ซ่อนเฉลยระหว่างสอบ มีนาฬิกาจับเวลา, ติดธง (Flag), แผง Question Navigator ที่ปรับตามจำนวนข้อของหัวข้อที่เลือก และสรุปผลเกณฑ์มาตรฐาน CEFR (B1, B1+, B2)

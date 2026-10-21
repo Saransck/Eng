@@ -2,30 +2,170 @@
 // Extracted strictly from ALL exercises and exams in Units 4, 5, and 6
 
 const EXAM_TOPICS = [
-  { id: "all", unit: "all", titleEn: "Full B1-B2 Mock Exam", titleTh: "รวมทุกบท ทุกหัวข้อ (Comprehensive Mock Exam)", exerciseRef: "All Units (Ex 1–11)", icon: "🌟" },
+  // ================= 1. ALL UNITS MASTER TOPICS =================
+  { 
+    id: "all", 
+    unit: "all", 
+    section: "all", 
+    titleEn: "Full B1-B2 Mock Exam", 
+    titleTh: "รวมทุกบท ทุกหัวข้อ (Comprehensive Mock Exam)", 
+    exerciseRef: "All Units (103 ข้อ)", 
+    icon: "🌟" 
+  },
+  { 
+    id: "all-vocab", 
+    unit: "all", 
+    section: "vocab", 
+    titleEn: "All Units: Vocabulary Master", 
+    titleTh: "Vocabulary ของทุกบท (Unit 4, 5, 6)", 
+    exerciseRef: "รวมคำศัพท์ทุกบท (60 ข้อ)", 
+    icon: "📚" 
+  },
+  { 
+    id: "all-grammar", 
+    unit: "all", 
+    section: "grammar", 
+    titleEn: "All Units: Grammar Master", 
+    titleTh: "Grammar ของทุกบท (Unit 4, 5, 6)", 
+    exerciseRef: "รวมไวยากรณ์ทุกบท (28 ข้อ)", 
+    icon: "⚖️" 
+  },
+  { 
+    id: "all-reading", 
+    unit: "all", 
+    section: "reading", 
+    titleEn: "All Units: Reading Comprehension", 
+    titleTh: "Reading ของทุกบท (Unit 4, 5, 6)", 
+    exerciseRef: "รวมบทอ่านทุกบท (15 ข้อ)", 
+    icon: "📖" 
+  },
   
-  // UNIT 4 TOPICS
-  { id: "u4-vocab-benefits", unit: 4, titleEn: "Workplace Vocab & Benefits", titleTh: "คำศัพท์สถานที่ทำงาน & สวัสดิการ", exerciseRef: "Unit 4, Ex 1 & 2", icon: "🏢" },
-  { id: "u4-meeting-lang", unit: 4, titleEn: "Meeting Language & Phrases", titleTh: "สำนวนภาษาและวัตถุประสงค์การประชุม", exerciseRef: "Unit 4, Ex 3", icon: "💬" },
-  { id: "u4-phrasal-verbs", unit: 4, titleEn: "Phrasal Verbs in Action", titleTh: "กริยาวลีแบบแยกได้ & แยกไม่ได้", exerciseRef: "Unit 4, Ex 4 & 5", icon: "🔄" },
-  { id: "u4-future-forms", unit: 4, titleEn: "Future Forms & Work Plans", titleTh: "การใช้ Tense วางแผนอนาคตและนัดหมาย", exerciseRef: "Unit 4, Ex 6", icon: "⏳" },
-  { id: "u4-reading", unit: 4, titleEn: "Reading: Job Satisfaction", titleTh: "บทอ่านความพึงพอใจในงานและปัจจัยความสุข", exerciseRef: "Unit 4, Ex 7 & 8", icon: "📊" },
-  { id: "u4-conditions", unit: 4, titleEn: "Work Conditions & Benefits", titleTh: "เงื่อนไขการทำงานและสวัสดิการของ Alisa", exerciseRef: "Unit 4, Ex 9 & 10", icon: "💼" },
+  // ================= 2. UNIT 4 TOPICS =================
+  { 
+    id: "u4-all", 
+    unit: 4, 
+    section: "all", 
+    titleEn: "Unit 4: Complete Workplace Exam", 
+    titleTh: "Unit 4: รวมทุกหัวข้อ (Workplace)", 
+    exerciseRef: "Unit 4 ครบทุกข้อ (37 ข้อ)", 
+    icon: "🏢" 
+  },
+  { 
+    id: "u4-all-vocab", 
+    unit: 4, 
+    section: "vocab", 
+    titleEn: "Unit 4: Vocabulary Complete", 
+    titleTh: "Unit 4: คำศัพท์สถานที่ทำงาน & สวัสดิการ & การประชุม", 
+    exerciseRef: "Ex 1, 2, 3, 9, 10 (19 ข้อ)", 
+    icon: "📚" 
+  },
+  { 
+    id: "u4-all-grammar", 
+    unit: 4, 
+    section: "grammar", 
+    titleEn: "Unit 4: Grammar Complete", 
+    titleTh: "Unit 4: ไวยากรณ์กริยาวลี & Future Forms", 
+    exerciseRef: "Ex 4, 5, 6 (12 ข้อ)", 
+    icon: "⚖️" 
+  },
+  { 
+    id: "u4-reading", 
+    unit: 4, 
+    section: "reading", 
+    titleEn: "Unit 4: Reading Comprehension", 
+    titleTh: "Unit 4: บทอ่านความพึงพอใจในงาน (Job Satisfaction)", 
+    exerciseRef: "Unit 4 Ex 7 & 8 (6 ข้อ)", 
+    icon: "📖" 
+  },
+  { id: "u4-vocab-benefits", unit: 4, section: "vocab", titleEn: "Workplace Vocab & Benefits", titleTh: "คำศัพท์สถานที่ทำงาน & สวัสดิการพนักงาน", exerciseRef: "Unit 4, Ex 1 & 2", icon: "🏢" },
+  { id: "u4-meeting-lang", unit: 4, section: "vocab", titleEn: "Meeting Language & Phrases", titleTh: "สำนวนภาษาและวัตถุประสงค์การประชุม", exerciseRef: "Unit 4, Ex 3", icon: "💬" },
+  { id: "u4-phrasal-verbs", unit: 4, section: "grammar", titleEn: "Phrasal Verbs in Action", titleTh: "กริยาวลีแบบแยกได้ & แยกไม่ได้", exerciseRef: "Unit 4, Ex 4 & 5", icon: "🔄" },
+  { id: "u4-future-forms", unit: 4, section: "grammar", titleEn: "Future Forms & Work Plans", titleTh: "การใช้ Tense วางแผนอนาคตและนัดหมาย", exerciseRef: "Unit 4, Ex 6", icon: "⏳" },
+  { id: "u4-conditions", unit: 4, section: "vocab", titleEn: "Work Conditions & Benefits", titleTh: "เงื่อนไขการทำงานและสวัสดิการของ Alisa", exerciseRef: "Unit 4, Ex 9 & 10", icon: "💼" },
 
-  // UNIT 5 TOPICS
-  { id: "u5-signposting", unit: 5, titleEn: "Presentation Signposting", titleTh: "ถ้อยคำบอกทิศทางนำเสนอและโครงสร้าง", exerciseRef: "Unit 5, Ex 1", icon: "🗣️" },
-  { id: "u5-vocab", unit: 5, titleEn: "Presentation Equipment & Advanced Vocab", titleTh: "คำศัพท์และอุปกรณ์นำเสนอระดับสูง", exerciseRef: "Unit 5, Ex 2 & 3", icon: "🎯" },
-  { id: "u5-so-such", unit: 5, titleEn: "Grammar: So vs. Such", titleTh: "ไวยากรณ์ So vs. Such และ That Clauses", exerciseRef: "Unit 5, Ex 4 & 5", icon: "⚖️" },
-  { id: "u5-discourse-markers", unit: 5, titleEn: "Grammar: Discourse Markers", titleTh: "คำเชื่อม Result, Contrast, Addition", exerciseRef: "Unit 5, Ex 6", icon: "🔗" },
-  { id: "u5-reading", unit: 5, titleEn: "Reading: Dealing with Nervousness", titleTh: "บทอ่านการรับมือความประหม่าก่อนขึ้นพูด", exerciseRef: "Unit 5, Ex 7 & 8", icon: "🧘" },
-  { id: "u5-dos-donts", unit: 5, titleEn: "Presentation Do's & Don'ts", titleTh: "ข้อควรทำและไม่ควรทำในการนำเสนอ (Nicole Shaw)", exerciseRef: "Unit 5, Ex 9 & 10", icon: "👔" },
+  // ================= 3. UNIT 5 TOPICS =================
+  { 
+    id: "u5-all", 
+    unit: 5, 
+    section: "all", 
+    titleEn: "Unit 5: Complete Presentations Exam", 
+    titleTh: "Unit 5: รวมทุกหัวข้อ (Presentations)", 
+    exerciseRef: "Unit 5 ครบทุกข้อ (36 ข้อ)", 
+    icon: "🎤" 
+  },
+  { 
+    id: "u5-all-vocab", 
+    unit: 5, 
+    section: "vocab", 
+    titleEn: "Unit 5: Vocabulary Complete", 
+    titleTh: "Unit 5: คำศัพท์การนำเสนอ & Signposting & ข้อควรปฏิบัติ", 
+    exerciseRef: "Ex 1, 2, 3, 9, 10 (18 ข้อ)", 
+    icon: "📚" 
+  },
+  { 
+    id: "u5-all-grammar", 
+    unit: 5, 
+    section: "grammar", 
+    titleEn: "Unit 5: Grammar Complete", 
+    titleTh: "Unit 5: ไวยากรณ์ So vs. Such & Discourse Markers", 
+    exerciseRef: "Ex 4, 5, 6 (12 ข้อ)", 
+    icon: "⚖️" 
+  },
+  { 
+    id: "u5-reading", 
+    unit: 5, 
+    section: "reading", 
+    titleEn: "Unit 5: Reading Comprehension", 
+    titleTh: "Unit 5: บทอ่านการรับมือความประหม่า (Dealing with Nervousness)", 
+    exerciseRef: "Unit 5 Ex 7 & 8 (6 ข้อ)", 
+    icon: "📖" 
+  },
+  { id: "u5-signposting", unit: 5, section: "vocab", titleEn: "Presentation Signposting", titleTh: "ถ้อยคำบอกทิศทางนำเสนอและโครงสร้าง", exerciseRef: "Unit 5, Ex 1", icon: "🗣️" },
+  { id: "u5-vocab", unit: 5, section: "vocab", titleEn: "Presentation Equipment & Advanced Vocab", titleTh: "คำศัพท์และอุปกรณ์นำเสนอระดับสูง", exerciseRef: "Unit 5, Ex 2 & 3", icon: "🎯" },
+  { id: "u5-so-such", unit: 5, section: "grammar", titleEn: "Grammar: So vs. Such", titleTh: "ไวยากรณ์ So vs. Such และ That Clauses", exerciseRef: "Unit 5, Ex 4 & 5", icon: "⚖️" },
+  { id: "u5-discourse-markers", unit: 5, section: "grammar", titleEn: "Grammar: Discourse Markers", titleTh: "คำเชื่อม Result, Contrast, Addition", exerciseRef: "Unit 5, Ex 6", icon: "🔗" },
+  { id: "u5-dos-donts", unit: 5, section: "vocab", titleEn: "Presentation Do's & Don'ts", titleTh: "ข้อควรทำและไม่ควรทำในการนำเสนอ (Nicole Shaw)", exerciseRef: "Unit 5, Ex 9 & 10", icon: "👔" },
 
-  // UNIT 6 TOPICS
-  { id: "u6-culture-context", unit: 6, titleEn: "High vs. Low Context Cultures", titleTh: "วัฒนธรรมบริบทสูง vs บริบทต่ำและลักษณะตรงข้าม", exerciseRef: "Unit 6, Ex 1, 2 & 3", icon: "🌏" },
-  { id: "u6-culture-vocab", unit: 6, titleEn: "Multicultural Workplace & Passage Vocab", titleTh: "คำศัพท์วัฒนธรรมองค์กรและบทอ่าน", exerciseRef: "Unit 6, Ex 4 & 9", icon: "🤝" },
-  { id: "u6-reported-speech", unit: 6, titleEn: "Grammar: Reported Speech", titleTh: "การรายงานคำพูดประโยคบอกเล่าและคำถาม", exerciseRef: "Unit 6, Ex 5 & 6", icon: "📢" },
-  { id: "u6-reading", unit: 6, titleEn: "Reading: Different Cultures in Business", titleTh: "บทอ่านมารยาทข้ามวัฒนธรรมและการไม่เหมารวม", exerciseRef: "Unit 6, Ex 7 & 8", icon: "🌐" },
-  { id: "u6-gift-giving", unit: 6, titleEn: "Global Gift-Giving Customs", titleTh: "ธรรมเนียมการให้ของขวัญทางธุรกิจทั่วโลก (Rob Hall)", exerciseRef: "Unit 6, Ex 10 & 11", icon: "🎁" }
+  // ================= 4. UNIT 6 TOPICS =================
+  { 
+    id: "u6-all", 
+    unit: 6, 
+    section: "all", 
+    titleEn: "Unit 6: Complete Multicultural Exam", 
+    titleTh: "Unit 6: รวมทุกหัวข้อ (Multicultural)", 
+    exerciseRef: "Unit 6 ครบทุกข้อ (30 ข้อ)", 
+    icon: "🌐" 
+  },
+  { 
+    id: "u6-all-vocab", 
+    unit: 6, 
+    section: "vocab", 
+    titleEn: "Unit 6: Vocabulary Complete", 
+    titleTh: "Unit 6: คำศัพท์บริบทวัฒนธรรม & มารยาทของขวัญ", 
+    exerciseRef: "Ex 1, 2, 3, 4, 9, 10, 11 (18 ข้อ)", 
+    icon: "📚" 
+  },
+  { 
+    id: "u6-reported-speech", 
+    unit: 6, 
+    section: "grammar", 
+    titleEn: "Unit 6: Grammar (Reported Speech)", 
+    titleTh: "Unit 6: การรายงานคำพูดประโยคบอกเล่าและคำถาม", 
+    exerciseRef: "Unit 6 Ex 5 & 6 (6 ข้อ)", 
+    icon: "📢" 
+  },
+  { 
+    id: "u6-reading", 
+    unit: 6, 
+    section: "reading", 
+    titleEn: "Unit 6: Reading Comprehension", 
+    titleTh: "Unit 6: บทอ่านมารยาทข้ามวัฒนธรรม (Different Cultures in Business)", 
+    exerciseRef: "Unit 6 Ex 7 & 8 (6 ข้อ)", 
+    icon: "📖" 
+  },
+  { id: "u6-culture-context", unit: 6, section: "vocab", titleEn: "High vs. Low Context Cultures", titleTh: "วัฒนธรรมบริบทสูง vs บริบทต่ำและลักษณะตรงข้าม", exerciseRef: "Unit 6, Ex 1, 2 & 3", icon: "🌏" },
+  { id: "u6-culture-vocab", unit: 6, section: "vocab", titleEn: "Multicultural Workplace & Passage Vocab", titleTh: "คำศัพท์วัฒนธรรมองค์กรและบทอ่าน", exerciseRef: "Unit 6, Ex 4 & 9", icon: "🤝" },
+  { id: "u6-gift-giving", unit: 6, section: "vocab", titleEn: "Global Gift-Giving Customs", titleTh: "ธรรมเนียมการให้ของขวัญทางธุรกิจทั่วโลก (Rob Hall)", exerciseRef: "Unit 6, Ex 10 & 11", icon: "🎁" }
 ];
 
 const EXAM_DATA = [

@@ -49,7 +49,8 @@
     exam: {
       mode: 'practice', // 'practice' | 'exam'
       activeUnitFilter: 'all', // 'all' | 4 | 5 | 6
-      activeTopicId: 'all', // 'all' or specific topic ID like 'u4-vocab-benefits'
+      activeSkillFilter: 'all', // 'all' | 'vocab' | 'grammar' | 'reading'
+      activeTopicId: 'all', // 'all' or specific topic ID
       currentIndex: 0,
       userAnswers: {}, // { questionId: selectedOptionIndex }
       flaggedSet: new Set(),
@@ -1222,14 +1223,46 @@
     clearInterval(state.exam.timerInterval);
   }
 
-  function getExamQuestions() {
-    let list = (typeof EXAM_DATA !== 'undefined' && Array.isArray(EXAM_DATA)) ? EXAM_DATA : [];
+  function isVocabSkill(sec) {
+    return sec === 'vocab' || sec === 'culture' || sec === 'listening';
+  }
 
-    // Filter by topic if a specific topic is selected
-    if (state.exam.activeTopicId && state.exam.activeTopicId !== 'all') {
-      list = list.filter(q => q.topicId === state.exam.activeTopicId);
-    } else if (state.exam.activeUnitFilter && state.exam.activeUnitFilter !== 'all') {
+  function getQuestionsForTopic(topicId) {
+    const allData = (typeof EXAM_DATA !== 'undefined' && Array.isArray(EXAM_DATA)) ? EXAM_DATA : [];
+    if (!topicId || topicId === 'all') return allData;
+    if (topicId === 'all-vocab') return allData.filter(q => isVocabSkill(q.section));
+    if (topicId === 'all-grammar') return allData.filter(q => q.section === 'grammar');
+    if (topicId === 'all-reading') return allData.filter(q => q.section === 'reading');
+    if (topicId === 'u4-all') return allData.filter(q => q.unit === 4);
+    if (topicId === 'u4-all-vocab') return allData.filter(q => q.unit === 4 && isVocabSkill(q.section));
+    if (topicId === 'u4-all-grammar') return allData.filter(q => q.unit === 4 && q.section === 'grammar');
+    if (topicId === 'u4-reading') return allData.filter(q => q.unit === 4 && q.section === 'reading');
+    if (topicId === 'u5-all') return allData.filter(q => q.unit === 5);
+    if (topicId === 'u5-all-vocab') return allData.filter(q => q.unit === 5 && isVocabSkill(q.section));
+    if (topicId === 'u5-all-grammar') return allData.filter(q => q.unit === 5 && q.section === 'grammar');
+    if (topicId === 'u5-reading') return allData.filter(q => q.unit === 5 && q.section === 'reading');
+    if (topicId === 'u6-all') return allData.filter(q => q.unit === 6);
+    if (topicId === 'u6-all-vocab') return allData.filter(q => q.unit === 6 && isVocabSkill(q.section));
+    if (topicId === 'u6-reported-speech') return allData.filter(q => q.unit === 6 && q.section === 'grammar');
+    if (topicId === 'u6-reading') return allData.filter(q => q.unit === 6 && q.section === 'reading');
+    return allData.filter(q => q.topicId === topicId);
+  }
+
+  function getExamQuestions() {
+    let list = getQuestionsForTopic(state.exam.activeTopicId);
+
+    // If on general topic and unit filter is explicitly set
+    if ((!state.exam.activeTopicId || state.exam.activeTopicId === 'all') && state.exam.activeUnitFilter !== 'all') {
       list = list.filter(q => q.unit === Number(state.exam.activeUnitFilter));
+    }
+
+    // Filter by skill filter if active and not already covered by specific topic
+    if (state.exam.activeSkillFilter && state.exam.activeSkillFilter !== 'all' && (!state.exam.activeTopicId || state.exam.activeTopicId === 'all' || state.exam.activeTopicId === 'u4-all' || state.exam.activeTopicId === 'u5-all' || state.exam.activeTopicId === 'u6-all')) {
+      if (state.exam.activeSkillFilter === 'vocab') {
+        list = list.filter(q => isVocabSkill(q.section));
+      } else {
+        list = list.filter(q => q.section === state.exam.activeSkillFilter);
+      }
     }
 
     // Filter by wrong answers if requested
@@ -1245,11 +1278,49 @@
 
   function selectExamUnit(unit) {
     state.exam.activeUnitFilter = unit;
-    const topics = (typeof EXAM_TOPICS !== 'undefined' && Array.isArray(EXAM_TOPICS)) ? EXAM_TOPICS : [];
-    if (unit !== 'all') {
-      const topicObj = topics.find(t => t.id === state.exam.activeTopicId);
-      if (!topicObj || topicObj.unit !== Number(unit)) {
+    if (unit === 'all') {
+      if (state.exam.activeSkillFilter && state.exam.activeSkillFilter !== 'all') {
+        state.exam.activeTopicId = `all-${state.exam.activeSkillFilter}`;
+      } else {
         state.exam.activeTopicId = 'all';
+      }
+    } else {
+      if (state.exam.activeSkillFilter && state.exam.activeSkillFilter !== 'all') {
+        if (state.exam.activeSkillFilter === 'reading') {
+          state.exam.activeTopicId = `u${unit}-reading`;
+        } else if (state.exam.activeSkillFilter === 'grammar' && unit === 6) {
+          state.exam.activeTopicId = 'u6-reported-speech';
+        } else {
+          state.exam.activeTopicId = `u${unit}-all-${state.exam.activeSkillFilter}`;
+        }
+      } else {
+        state.exam.activeTopicId = `u${unit}-all`;
+      }
+    }
+    state.exam.currentIndex = 0;
+    renderExam();
+  }
+
+  function selectExamSkill(skill) {
+    state.exam.activeSkillFilter = skill;
+    if (skill === 'all') {
+      if (state.exam.activeUnitFilter === 'all') {
+        state.exam.activeTopicId = 'all';
+      } else {
+        state.exam.activeTopicId = `u${state.exam.activeUnitFilter}-all`;
+      }
+    } else {
+      if (state.exam.activeUnitFilter === 'all') {
+        state.exam.activeTopicId = `all-${skill}`;
+      } else {
+        const u = state.exam.activeUnitFilter;
+        if (skill === 'reading') {
+          state.exam.activeTopicId = `u${u}-reading`;
+        } else if (skill === 'grammar' && u === 6) {
+          state.exam.activeTopicId = 'u6-reported-speech';
+        } else {
+          state.exam.activeTopicId = `u${u}-all-${skill}`;
+        }
       }
     }
     state.exam.currentIndex = 0;
@@ -1260,8 +1331,17 @@
     state.exam.activeTopicId = topicId;
     const topics = (typeof EXAM_TOPICS !== 'undefined' && Array.isArray(EXAM_TOPICS)) ? EXAM_TOPICS : [];
     const topicObj = topics.find(t => t.id === topicId);
-    if (topicObj && topicObj.unit !== 'all') {
-      state.exam.activeUnitFilter = topicObj.unit;
+    if (topicObj) {
+      if (topicObj.unit !== 'all') {
+        state.exam.activeUnitFilter = topicObj.unit;
+      } else {
+        state.exam.activeUnitFilter = 'all';
+      }
+      if (topicObj.section && topicObj.section !== 'all') {
+        state.exam.activeSkillFilter = topicObj.section;
+      } else {
+        state.exam.activeSkillFilter = 'all';
+      }
     }
     state.exam.currentIndex = 0;
     state.exam.filterSection = 'all';
@@ -1278,6 +1358,7 @@
   function resetExamFilters() {
     state.exam.activeTopicId = 'all';
     state.exam.activeUnitFilter = 'all';
+    state.exam.activeSkillFilter = 'all';
     state.exam.filterSection = 'all';
     state.exam.currentIndex = 0;
     renderExam();
@@ -1330,40 +1411,56 @@
         exerciseRef: 'Unit 4–6 Ex 1–11'
       };
 
-      // Filter topics for the cards grid based on activeUnitFilter
+      // Filter topics for the cards grid based on activeUnitFilter and activeSkillFilter
       const visibleTopics = topics.filter(t => {
-        if (t.id === 'all') return true;
-        if (state.exam.activeUnitFilter === 'all') return true;
-        return t.unit === Number(state.exam.activeUnitFilter);
+        let unitOk = true;
+        if (state.exam.activeUnitFilter !== 'all') {
+          unitOk = (t.unit === Number(state.exam.activeUnitFilter)) || (t.id === `all-${t.section}`);
+        }
+
+        let skillOk = true;
+        if (state.exam.activeSkillFilter !== 'all') {
+          skillOk = (t.section === state.exam.activeSkillFilter) || (t.section === 'all');
+        }
+
+        return unitOk && skillOk;
       });
 
-    // Generate topic cards HTML
-    const topicCardsHtml = visibleTopics.map(topic => {
-      const isCur = state.exam.activeTopicId === topic.id;
-      const topicQuestions = topic.id === 'all' 
-        ? EXAM_DATA 
-        : EXAM_DATA.filter(q => q.topicId === topic.id);
-      const qCount = topicQuestions.length;
-      const ansCount = topicQuestions.filter(q => state.exam.userAnswers[q.id] !== undefined).length;
+      // Generate topic cards HTML
+      const topicCardsHtml = visibleTopics.map(topic => {
+        const isCur = state.exam.activeTopicId === topic.id;
+        const topicQuestions = getQuestionsForTopic(topic.id);
+        const qCount = topicQuestions.length;
+        const ansCount = topicQuestions.filter(q => state.exam.userAnswers[q.id] !== undefined).length;
 
-      return `
-        <div class="exam-topic-card ${isCur ? 'active' : ''}" onclick="window.app.selectExamTopic('${topic.id}')">
-          <div class="topic-card-header">
-            <div style="display: flex; align-items: flex-start; gap: 0.6rem;">
-              <span class="topic-card-icon">${topic.icon}</span>
-              <div>
-                <div class="topic-card-title-en">${topic.titleEn}</div>
-                <div class="topic-card-title-th">${topic.titleTh}</div>
+        const badgeClass = topic.section === 'vocab' ? 'badge-vocab' :
+                           topic.section === 'grammar' ? 'badge-grammar' :
+                           topic.section === 'reading' ? 'badge-reading' : 'badge-exam';
+        const badgeLabel = topic.section === 'vocab' ? 'VOCAB' :
+                           topic.section === 'grammar' ? 'GRAMMAR' :
+                           topic.section === 'reading' ? 'READING' : 'ALL';
+
+        return `
+          <div class="exam-topic-card ${isCur ? 'active' : ''}" onclick="window.app.selectExamTopic('${topic.id}')">
+            <div class="topic-card-header">
+              <div style="display: flex; align-items: flex-start; gap: 0.6rem;">
+                <span class="topic-card-icon">${topic.icon}</span>
+                <div>
+                  <div class="topic-card-title-en">${topic.titleEn}</div>
+                  <div class="topic-card-title-th">${topic.titleTh}</div>
+                </div>
               </div>
             </div>
+            <div class="topic-card-footer">
+              <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                <span class="badge ${badgeClass}" style="font-size: 0.68rem; padding: 0.15rem 0.4rem;">${badgeLabel}</span>
+                <span class="topic-exercise-tag">${topic.exerciseRef || 'Exercises'}</span>
+              </div>
+              <span class="topic-count-pill">${ansCount}/${qCount} ข้อ</span>
+            </div>
           </div>
-          <div class="topic-card-footer">
-            <span class="topic-exercise-tag">${topic.exerciseRef || 'Exercises'}</span>
-            <span class="topic-count-pill">${ansCount}/${qCount} ข้อ</span>
-          </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
 
     let mainExamContent = '';
     if (totalQ === 0) {
@@ -1559,29 +1656,65 @@
               <span>🎯</span><span>Exam Center: เลือกฝึกสอบแยกตามหัวข้อและบทเรียน</span>
             </h3>
             <p style="font-size: 0.82rem; color: var(--text-muted);">
-              รวบรวมแบบฝึกหัดจริงครบทุก Exercise (Ex 1–11) จาก Unit 4, Unit 5, Unit 6 พร้อมเฉลยละเอียดและหลักฐานอ้างอิง
+              รวบรวมแบบฝึกหัดจริงครบทุก Exercise จาก Unit 4, 5, 6 พร้อมโหมดฝึกเฉพาะ Vocabulary, Grammar, Reading ของทุกบท
             </p>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-sm ${state.exam.activeTopicId === 'all' ? 'btn-primary' : 'btn-outline'}" onclick="window.app.selectExamTopic('all')">
-              🌟 รวมทุกบท (${EXAM_DATA.length} ข้อ)
+          <div class="exam-quick-actions">
+            <button class="btn btn-sm ${state.exam.activeTopicId === 'all' ? 'btn-primary' : 'btn-outline'}" onclick="window.app.selectExamTopic('all')" title="ทำข้อสอบรวมทุกบท ทุกทักษะ">
+              🌟 รวมทุกบท (103 ข้อ)
+            </button>
+            <button class="btn btn-sm ${state.exam.activeTopicId === 'all-vocab' ? 'btn-primary' : 'btn-outline'}" onclick="window.app.selectExamTopic('all-vocab')" style="${state.exam.activeTopicId === 'all-vocab' ? '' : 'color: var(--vocab-accent); border-color: var(--vocab-accent);'}" title="ทำเฉพาะข้อสอบคำศัพท์ของทุกบท">
+              📚 Vocab ทุกบท (60 ข้อ)
+            </button>
+            <button class="btn btn-sm ${state.exam.activeTopicId === 'all-grammar' ? 'btn-primary' : 'btn-outline'}" onclick="window.app.selectExamTopic('all-grammar')" style="${state.exam.activeTopicId === 'all-grammar' ? '' : 'color: var(--grammar-accent); border-color: var(--grammar-accent);'}" title="ทำเฉพาะข้อสอบไวยากรณ์ของทุกบท">
+              ⚖️ Grammar ทุกบท (28 ข้อ)
+            </button>
+            <button class="btn btn-sm ${state.exam.activeTopicId === 'all-reading' ? 'btn-primary' : 'btn-outline'}" onclick="window.app.selectExamTopic('all-reading')" style="${state.exam.activeTopicId === 'all-reading' ? '' : 'color: var(--reading-accent); border-color: var(--reading-accent);'}" title="ทำเฉพาะข้อสอบบทอ่านจับใจความของทุกบท">
+              📖 Reading ทุกบท (15 ข้อ)
             </button>
           </div>
         </div>
 
-        <!-- Unit Filter Tabs -->
-        <div class="exam-unit-tabs">
+        <!-- Filter Row 1: Unit Filter Tabs -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+            🏢 เลือกบทเรียน (Unit):
+          </span>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">
+            แสดงหัวข้อที่ตรงกับเงื่อนไข (${visibleTopics.length} การ์ด)
+          </span>
+        </div>
+        <div class="exam-unit-tabs" style="margin-bottom: 0.6rem;">
           <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 'all' ? 'active' : ''}" onclick="window.app.selectExamUnit('all')">
             🌟 ทุกบท (All Units)
           </button>
           <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 4 ? 'active' : ''}" onclick="window.app.selectExamUnit(4)">
-            🏢 Unit 4: Workplace (6 หัวข้อ)
+            🏢 Unit 4: Workplace (37 ข้อ)
           </button>
           <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 5 ? 'active' : ''}" onclick="window.app.selectExamUnit(5)">
-            🎤 Unit 5: Presentations (6 หัวข้อ)
+            🎤 Unit 5: Presentations (36 ข้อ)
           </button>
           <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 6 ? 'active' : ''}" onclick="window.app.selectExamUnit(6)">
-            🌐 Unit 6: Multicultural (5 หัวข้อ)
+            🌐 Unit 6: Multicultural (30 ข้อ)
+          </button>
+        </div>
+
+        <!-- Filter Row 2: Skill Filter Tabs -->
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+          🎯 เลือกทักษะ (Skill Focus):
+        </div>
+        <div class="exam-unit-tabs">
+          <button class="exam-unit-tab-btn ${state.exam.activeSkillFilter === 'all' ? 'active' : ''}" onclick="window.app.selectExamSkill('all')">
+            🎯 ทุกทักษะ (All Skills)
+          </button>
+          <button class="exam-unit-tab-btn ${state.exam.activeSkillFilter === 'vocab' ? 'active' : ''}" onclick="window.app.selectExamSkill('vocab')" style="${state.exam.activeSkillFilter === 'vocab' ? '' : 'color: var(--vocab-accent);'}">
+            📚 Vocabulary (คำศัพท์)
+          </button>
+          <button class="exam-unit-tab-btn ${state.exam.activeSkillFilter === 'grammar' ? 'active' : ''}" onclick="window.app.selectExamSkill('grammar')" style="${state.exam.activeSkillFilter === 'grammar' ? '' : 'color: var(--grammar-accent);'}">
+            ⚖️ Grammar (ไวยากรณ์)
+          </button>
+          <button class="exam-unit-tab-btn ${state.exam.activeSkillFilter === 'reading' ? 'active' : ''}" onclick="window.app.selectExamSkill('reading')" style="${state.exam.activeSkillFilter === 'reading' ? '' : 'color: var(--reading-accent);'}">
+            📖 Reading (บทอ่าน)
           </button>
         </div>
 
@@ -2102,6 +2235,7 @@
     openQuickReview,
     selectExamOption,
     selectExamUnit,
+    selectExamSkill,
     selectExamTopic,
     startTopicExam,
     resetExamFilters,

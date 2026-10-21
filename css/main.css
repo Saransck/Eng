@@ -1517,6 +1517,28 @@ mark {
   margin-bottom: 0.85rem;
 }
 
+.exam-quick-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .exam-quick-actions {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .exam-quick-actions .btn {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+  }
+}
+
 .exam-unit-tabs {
   display: flex;
   gap: 0.5rem;
