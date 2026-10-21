@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEFR B1–B2 Exam Prep | Interactive Preparation Web App</title>
+  <meta name="description" content="Interactive CEFR B1-B2 English Exam Preparation Web App covering Vocabulary, Grammar, Reading, and Practice Exam based on Units 4, 5, and 6.">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+
+  <!-- Sticky Header & Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-badge">B2</div>
+        <div class="logo-text">
+          <h1>CEFR B1–B2 <span class="level-tag">Exam Prep</span></h1>
+          <span>English Preparation Master</span>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-tab="dashboard">
+          <span>🏠 Dashboard</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="vocab">
+          <span>📚 Vocabulary</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="grammar">
+          <span>⚖️ Grammar</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="reading">
+          <span>📖 Reading</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="cheatsheet">
+          <span>⚡ Cheat Sheet</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="exam">
+          <span>🎯 Practice Exam</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="progress">
+          <span>📈 Progress</span>
+        </button>
+      </nav>
+
+      <!-- Header Utilities -->
+      <div class="header-actions">
+        <button class="theme-toggle-btn" id="themeToggleBtn" title="สลับโหมดมืด/สว่าง">
+          <!-- Moon Icon Default -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Wrapper -->
+  <main class="main-wrapper" id="mainContainer">
+    <!-- Tab 1: Dashboard -->
+    <div id="tab-dashboard" class="tab-pane active"></div>
+
+    <!-- Tab 2: Vocabulary Explorer -->
+    <div id="tab-vocab" class="tab-pane"></div>
+
+    <!-- Tab 3: Grammar Guide -->
+    <div id="tab-grammar" class="tab-pane"></div>
+
+    <!-- Tab 4: Reading Practice -->
+    <div id="tab-reading" class="tab-pane"></div>
+
+    <!-- Tab 5: Keyword Cheat Sheet -->
+    <div id="tab-cheatsheet" class="tab-pane"></div>
+
+    <!-- Tab 6: Practice Exam -->
+    <div id="tab-exam" class="tab-pane"></div>
+
+    <!-- Tab 7: Progress & Review -->
+    <div id="tab-progress" class="tab-pane"></div>
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav">
+    <button class="mobile-nav-item active" data-tab="dashboard">
+      <span>🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="vocab">
+      <span>📚</span>
+      <span>Vocab</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="grammar">
+      <span>⚖️</span>
+      <span>Grammar</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="reading">
+      <span>📖</span>
+      <span>Reading</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="cheatsheet">
+      <span>⚡</span>
+      <span>Cheat</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="exam">
+      <span>🎯</span>
+      <span>Exam</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="progress">
+      <span>📈</span>
+      <span>Stats</span>
+    </button>
+  </nav>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JavaScript Datasets & Application Logic -->
+  <script src="js/data/vocabData.js"></script>
+  <script src="js/data/grammarData.js"></script>
+  <script src="js/data/readingData.js"></script>
+  <script src="js/data/cheatSheetData.js"></script>
+  <script src="js/data/examData.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
