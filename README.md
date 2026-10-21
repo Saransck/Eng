@@ -81,18 +81,36 @@ d:/Eng/
 - **Reading Question Keywords:** เทคนิคและกลยุทธ์จัดการคำถาม เช่น *Main Idea, According to the passage, Infer/Imply, Refer to, Closest in meaning, Author's purpose, NOT/EXCEPT*
 - **ฟังก์ชันค้นหาด่วน:** สามารถพิมพ์คำค้นเพื่อดึงเฉพาะคีย์เวิร์ดที่ต้องการทบทวนได้ทันที
 
-### 6. Practice Exam (ข้อสอบจำลอง 40 ข้อ)
-- **โครงสร้างข้อสอบ:**
-  - **Vocabulary:** 15 ข้อ
-  - **Grammar:** 15 ข้อ
-  - **Reading Comprehension:** 10 ข้อ (2 บทอ่าน x 5 ข้อ)
-- **2 โหมดการใช้งาน:**
-  - **Practice Mode:** เลือกตอบแล้วตรวจคำตอบพร้อมแสดงคำอธิบายภาษาไทยและคีย์เวิร์ดได้ทันที
-  - **Exam Mode:** ซ่อนเฉลยระหว่างทำ พร้อมตัวจับเวลา (Timer), ติดธงข้อที่สงสัย (Flag), แผงนำทางข้อสอบ (Question Navigator 1-40) และหน้าต่างยืนยันก่อนส่ง
-- **ระบบวิเคราะห์ผลคะแนน:**
-  - แสดงคะแนนรวมและจำแนกรายหมวด (Vocab /15, Grammar /15, Reading /10)
-  - **Retry Wrong Answers:** ปุ่มคัดกรองเฉพาะข้อที่ตอบผิด เพื่อให้ผู้เรียนฝึกซ้ำจนกว่าจะแม่นยำ
-  - **Retake Exam:** ปุ่มรีเซ็ตทำข้อสอบชุดใหม่
+### 6. Practice Exam Center (คลังข้อสอบแยกตามหัวข้อและแบบฝึกหัดจริง 17 หัวข้อ รวม 98 ข้อ)
+- **ระบบเลือกทำข้อสอบรายหัวข้อ (Topic & Exercise Selector):**
+  - **Unit 4: At the Workplace (6 หัวข้อ)**
+    1. *Workplace Vocab & Benefits* (Unit 4, Ex 1 & 2)
+    2. *Meeting Language & Phrases* (Unit 4, Ex 3)
+    3. *Phrasal Verbs in Action* (Unit 4, Ex 4 & 5)
+    4. *Future Forms & Work Plans* (Unit 4, Ex 6)
+    5. *Reading: Job Satisfaction* (Unit 4, Ex 7 & 8)
+    6. *Work Conditions & Benefits* (Unit 4, Ex 9 & 10 - Alisa Boonliang)
+  - **Unit 5: Presentation (6 หัวข้อ)**
+    7. *Presentation Signposting* (Unit 5, Ex 1)
+    8. *Presentation Equipment & Advanced Vocab* (Unit 5, Ex 2 & 3)
+    9. *Grammar: So vs. Such* (Unit 5, Ex 4 & 5)
+    10. *Grammar: Discourse Markers* (Unit 5, Ex 6)
+    11. *Reading: Dealing with Nervousness* (Unit 5, Ex 7 & 8)
+    12. *Presentation Do's & Don'ts* (Unit 5, Ex 9 & 10 - Nicole Shaw)
+  - **Unit 6: Communication in Multicultural Contexts (5 หัวข้อ)**
+    13. *High vs. Low Context Cultures* (Unit 6, Ex 1, 2 & 3)
+    14. *Multicultural Workplace & Passage Vocab* (Unit 6, Ex 4 & 9)
+    15. *Grammar: Reported Speech* (Unit 6, Ex 5 & 6)
+    16. *Reading: Different Cultures in Business* (Unit 6, Ex 7 & 8)
+    17. *Global Business Gift-Giving Customs* (Unit 6, Ex 10 & 11 - Rob Hall)
+  - **Full B1–B2 Comprehensive Mock Exam:** โหมดสอบรวมทุกหัวข้อ (98 ข้อ)
+- **2 โหมดการทดสอบ:**
+  - **Practice Mode:** แสดงคำอธิบายภาษาไทย คีย์เวิร์ด และประโยคหลักฐานทันทีเมื่อตอบ
+  - **Exam Mode:** ซ่อนเฉลยระหว่างสอบ มีนาฬิกาจับเวลา, ติดธง (Flag), แผง Question Navigator ที่ปรับตามจำนวนข้อของหัวข้อที่เลือก และสรุปผลเกณฑ์มาตรฐาน CEFR (B1, B1+, B2)
+- **ฟังก์ชันเฉพาะทาง:**
+  - **Retry Wrong Answers:** กรองเฉพาะข้อที่ตอบผิดในหัวข้อนั้น ๆ เพื่อทบทวนซ้ำ
+  - **Retake Exam:** รีเซ็ตทำข้อสอบชุดใหม่ทันที
+  - **Direct Practice Link:** เชื่อมโยงปุ่มฝึกทำข้อสอบจากหน้า Grammar Guide ตรงสู่หัวข้อใน Exam Center
 
 ### 7. Progress & Review (สรุปความคืบหน้า)
 - รายงานสถานะการเรียนรู้คำศัพท์ (จำได้แล้ว, บันทึกไว้, ยังไม่ได้จำ)

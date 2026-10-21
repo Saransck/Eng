@@ -48,6 +48,8 @@
     // Exam State
     exam: {
       mode: 'practice', // 'practice' | 'exam'
+      activeUnitFilter: 'all', // 'all' | 4 | 5 | 6
+      activeTopicId: 'all', // 'all' or specific topic ID like 'u4-vocab-benefits'
       currentIndex: 0,
       userAnswers: {}, // { questionId: selectedOptionIndex }
       flaggedSet: new Set(),
@@ -55,7 +57,7 @@
       timerSeconds: 0,
       timerRunning: false,
       timerInterval: null,
-      filterSection: 'all', // 'all' | 'vocab' | 'grammar' | 'reading' | 'wrong'
+      filterSection: 'all', // 'all' | 'wrong'
       history: JSON.parse(localStorage.getItem('cefr_exam_history') || '[]')
     }
   };
@@ -272,14 +274,14 @@
               <div>
                 <div class="module-header">
                   <div class="module-icon-box" style="background: var(--exam-bg); color: var(--exam-accent);">⚡</div>
-                  <span class="badge badge-exam">40 ข้อสอบ</span>
+                  <span class="badge badge-exam">17 หัวข้อ / 98 ข้อ</span>
                 </div>
-                <h4>Practice Exam</h4>
-                <p>ข้อสอบเสมือนจริง 4 ตัวเลือก แบ่งเป็น Vocab 15 ข้อ, Grammar 15 ข้อ และ Reading 10 ข้อ เลือกได้ทั้งโหมดฝึกและโหมดสอบ</p>
+                <h4>Practice Exam Center</h4>
+                <p>ครบทุก Exercise (Ex 1–11) จาก Unit 4, 5, 6 เลือกฝึกเจาะจงรายหัวข้อ (เช่น Phrasal Verbs, So/Such, Reported Speech) หรือสอบรวมทุกบท</p>
               </div>
               <div class="module-footer">
-                <span style="font-size: 0.8rem; font-weight: 600; color: var(--exam-accent);">เริ่มทำแบบทดสอบ →</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">ตรวจคะแนนทันที</span>
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--exam-accent);">เลือกฝึกทำรายหัวข้อ →</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">มีโหมด Practice & Exam</span>
               </div>
             </div>
           </div>
@@ -818,6 +820,19 @@
                   }).join('')}
                 </div>
 
+                <!-- Practice Button Linking to Exam Topic -->
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-subtle); display: flex; justify-content: flex-end;">
+                  <button class="btn btn-sm btn-primary" onclick="window.app.startTopicExam('${
+                    item.id === 'g-001' ? 'u4-phrasal-verbs' :
+                    item.id === 'g-002' ? 'u4-future-forms' :
+                    item.id === 'g-003' ? 'u5-so-such' :
+                    item.id === 'g-004' ? 'u5-discourse-markers' :
+                    'u6-reported-speech'
+                  }')">
+                    🚀 ฝึกทำข้อสอบหัวข้อนี้แบบเต็ม (Practice Topic Exam) →
+                  </button>
+                </div>
+
               </div>
             </div>
           `;
@@ -1199,13 +1214,62 @@
   }
 
   function getExamQuestions() {
+    let list = EXAM_DATA;
+
+    // Filter by topic if a specific topic is selected
+    if (state.exam.activeTopicId && state.exam.activeTopicId !== 'all') {
+      list = list.filter(q => q.topicId === state.exam.activeTopicId);
+    } else if (state.exam.activeUnitFilter && state.exam.activeUnitFilter !== 'all') {
+      list = list.filter(q => q.unit === Number(state.exam.activeUnitFilter));
+    }
+
+    // Filter by wrong answers if requested
     if (state.exam.filterSection === 'wrong') {
-      return EXAM_DATA.filter(q => {
+      list = list.filter(q => {
         const ans = state.exam.userAnswers[q.id];
         return ans !== undefined && ans !== q.correctAnswer;
       });
     }
-    return EXAM_DATA;
+
+    return list;
+  }
+
+  function selectExamUnit(unit) {
+    state.exam.activeUnitFilter = unit;
+    if (unit !== 'all') {
+      const topicObj = EXAM_TOPICS.find(t => t.id === state.exam.activeTopicId);
+      if (!topicObj || topicObj.unit !== Number(unit)) {
+        state.exam.activeTopicId = 'all';
+      }
+    }
+    state.exam.currentIndex = 0;
+    renderExam();
+  }
+
+  function selectExamTopic(topicId) {
+    state.exam.activeTopicId = topicId;
+    const topicObj = EXAM_TOPICS.find(t => t.id === topicId);
+    if (topicObj && topicObj.unit !== 'all') {
+      state.exam.activeUnitFilter = topicObj.unit;
+    }
+    state.exam.currentIndex = 0;
+    state.exam.filterSection = 'all';
+    renderExam();
+    const title = topicObj ? topicObj.titleEn : 'ข้อสอบทั้งหมด';
+    showToast(`เลือกหัวข้อ: ${title}`);
+  }
+
+  function startTopicExam(topicId) {
+    switchTab('exam');
+    selectExamTopic(topicId);
+  }
+
+  function resetExamFilters() {
+    state.exam.activeTopicId = 'all';
+    state.exam.activeUnitFilter = 'all';
+    state.exam.filterSection = 'all';
+    state.exam.currentIndex = 0;
+    renderExam();
   }
 
   function renderExam() {
@@ -1213,205 +1277,335 @@
     if (!container) return;
 
     const questions = getExamQuestions();
-    const currentQ = questions[state.exam.currentIndex] || questions[0];
     const totalQ = questions.length;
-    const answeredCount = Object.keys(state.exam.userAnswers).length;
+    if (state.exam.currentIndex >= totalQ) {
+      state.exam.currentIndex = Math.max(0, totalQ - 1);
+    }
+    const currentQ = questions[state.exam.currentIndex];
+    
+    // Count answered questions in current scope
+    const answeredInScope = questions.filter(q => state.exam.userAnswers[q.id] !== undefined).length;
     const isSubmitted = state.exam.isSubmitted;
     const isPracticeMode = state.exam.mode === 'practice';
 
-    const currentSelected = state.exam.userAnswers[currentQ.id];
-    const isCurrentAnswered = currentSelected !== undefined;
-    const isFlagged = state.exam.flaggedSet.has(currentQ.id);
+    // Active Topic Metadata
+    const activeTopicObj = EXAM_TOPICS.find(t => t.id === state.exam.activeTopicId) || EXAM_TOPICS[0];
+
+    // Filter topics for the cards grid based on activeUnitFilter
+    const visibleTopics = EXAM_TOPICS.filter(t => {
+      if (t.id === 'all') return true;
+      if (state.exam.activeUnitFilter === 'all') return true;
+      return t.unit === Number(state.exam.activeUnitFilter);
+    });
+
+    // Generate topic cards HTML
+    const topicCardsHtml = visibleTopics.map(topic => {
+      const isCur = state.exam.activeTopicId === topic.id;
+      const topicQuestions = topic.id === 'all' 
+        ? EXAM_DATA 
+        : EXAM_DATA.filter(q => q.topicId === topic.id);
+      const qCount = topicQuestions.length;
+      const ansCount = topicQuestions.filter(q => state.exam.userAnswers[q.id] !== undefined).length;
+
+      return `
+        <div class="exam-topic-card ${isCur ? 'active' : ''}" onclick="window.app.selectExamTopic('${topic.id}')">
+          <div class="topic-card-header">
+            <div style="display: flex; align-items: flex-start; gap: 0.6rem;">
+              <span class="topic-card-icon">${topic.icon}</span>
+              <div>
+                <div class="topic-card-title-en">${topic.titleEn}</div>
+                <div class="topic-card-title-th">${topic.titleTh}</div>
+              </div>
+            </div>
+          </div>
+          <div class="topic-card-footer">
+            <span class="topic-exercise-tag">${topic.exerciseRef || 'Exercises'}</span>
+            <span class="topic-count-pill">${ansCount}/${qCount} ข้อ</span>
+          </div>
+        </div>
+      `;
+    }).join('');
 
     container.innerHTML = `
+      <!-- Topic Hub / Exam Center -->
+      <div class="exam-topics-container">
+        <div class="exam-topics-header">
+          <div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🎯</span><span>Exam Center: เลือกฝึกสอบแยกตามหัวข้อและบทเรียน</span>
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">
+              รวบรวมแบบฝึกหัดจริงครบทุก Exercise (Ex 1–11) จาก Unit 4, Unit 5, Unit 6 พร้อมเฉลยละเอียดและหลักฐานอ้างอิง
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-sm ${state.exam.activeTopicId === 'all' ? 'btn-primary' : 'btn-outline'}" onclick="window.app.selectExamTopic('all')">
+              🌟 รวมทุกบท (${EXAM_DATA.length} ข้อ)
+            </button>
+          </div>
+        </div>
+
+        <!-- Unit Filter Tabs -->
+        <div class="exam-unit-tabs">
+          <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 'all' ? 'active' : ''}" onclick="window.app.selectExamUnit('all')">
+            🌟 ทุกบท (All Units)
+          </button>
+          <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 4 ? 'active' : ''}" onclick="window.app.selectExamUnit(4)">
+            🏢 Unit 4: Workplace (6 หัวข้อ)
+          </button>
+          <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 5 ? 'active' : ''}" onclick="window.app.selectExamUnit(5)">
+            🎤 Unit 5: Presentations (6 หัวข้อ)
+          </button>
+          <button class="exam-unit-tab-btn ${state.exam.activeUnitFilter === 6 ? 'active' : ''}" onclick="window.app.selectExamUnit(6)">
+            🌐 Unit 6: Multicultural (5 หัวข้อ)
+          </button>
+        </div>
+
+        <!-- Topic Cards Grid -->
+        <div class="exam-topic-cards-grid">
+          ${topicCardsHtml}
+        </div>
+      </div>
+
+      <!-- Active Topic Banner -->
+      <div class="active-topic-banner">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; flex-wrap: wrap;">
+            <span style="font-size: 1.25rem;">${activeTopicObj.icon}</span>
+            <strong style="color: var(--text-main); font-size: 1.05rem;">${activeTopicObj.titleEn}</strong>
+            <span class="topic-exercise-tag">${activeTopicObj.exerciseRef}</span>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-muted);">${activeTopicObj.titleTh}</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          ${state.exam.activeTopicId !== 'all' ? `
+            <button class="btn btn-sm btn-outline" onclick="window.app.selectExamTopic('all')">
+              🌟 ทำข้อสอบรวมทุกบท
+            </button>
+          ` : `
+            <span class="topic-count-pill" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;">
+              รวม ${totalQ} ข้อ
+            </span>
+          `}
+        </div>
+      </div>
+
+      <!-- Exam Status Bar -->
       <div class="exam-status-bar">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
           <span class="exam-mode-badge ${state.exam.mode === 'exam' ? 'mode-exam' : 'mode-practice'}">
             ${state.exam.mode === 'exam' ? '📝 Exam Mode' : '🧪 Practice Mode'}
           </span>
           <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
-            ตอบแล้ว ${answeredCount}/${EXAM_DATA.length} ข้อ
+            ตอบแล้ว ${answeredInScope}/${totalQ} ข้อ ${state.exam.filterSection === 'wrong' ? '(เฉพาะข้อที่ตอบผิด)' : ''}
           </span>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
           <div class="timer-box">
-            ⏱️ <span id="examTimerDisplay">00:00</span>
+            ⏱️ <span id="examTimerDisplay">${formatTimer(state.exam.timerSeconds)}</span>
           </div>
           <button class="btn btn-sm btn-outline" id="btnToggleExamMode">
             สลับเป็น ${state.exam.mode === 'exam' ? 'Practice Mode' : 'Exam Mode'}
           </button>
+          <button class="btn btn-sm btn-outline" onclick="window.app.retakeExam()">
+            🔄 รีเซ็ตทำใหม่
+          </button>
         </div>
       </div>
 
-      <div class="exam-layout">
-        <!-- Question Presentation Card -->
-        <div class="exam-question-card">
-          <div class="q-header-meta">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="badge ${
-                currentQ.section === 'vocab' ? 'badge-vocab' : currentQ.section === 'grammar' ? 'badge-grammar' : 'badge-reading'
-              }">
-                ${currentQ.section.toUpperCase()}
-              </span>
-              <span class="badge badge-unit">Unit ${currentQ.unit}</span>
-            </div>
-            
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <button class="btn btn-sm ${isFlagged ? 'btn-primary' : 'btn-outline'}" id="btnFlagQuestion">
-                ${isFlagged ? '🚩 Flagged' : '🏳️ Flag'}
-              </button>
-              <div class="q-number-pill">ข้อที่ ${state.exam.currentIndex + 1} / ${totalQ}</div>
-            </div>
-          </div>
-
-          <!-- If Reading passage question, show passage excerpt/title -->
-          ${currentQ.passageTitle ? `
-            <div class="passage-context-box">
-              <div style="font-weight: 700; color: var(--reading-accent); margin-bottom: 0.25rem;">
-                📖 ${currentQ.passageTitle}
+      <!-- Main Exam Content Area -->
+      ${totalQ === 0 ? `
+        <div class="card" style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-secondary); border-radius: 16px;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+          <h3 style="margin-bottom: 0.5rem;">ไม่มีข้อสอบที่ตรงกับเงื่อนไขในขณะนี้</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            ${state.exam.filterSection === 'wrong' 
+              ? 'ยินดีด้วย! คุณยังไม่มีข้อที่ตอบผิดในหัวข้อนี้ หรือทำถูกต้องทั้งหมดแล้ว' 
+              : 'กรุณาเลือกหัวข้ออื่นจากเมนูด้านบน'}
+          </p>
+          <button class="btn btn-primary" onclick="window.app.resetExamFilters()">
+            แสดงข้อสอบทั้งหมด
+          </button>
+        </div>
+      ` : `
+        <div class="exam-layout">
+          <!-- Question Presentation Card -->
+          <div class="exam-question-card">
+            <div class="q-header-meta">
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="badge ${
+                  currentQ.section === 'vocab' ? 'badge-vocab' : currentQ.section === 'grammar' ? 'badge-grammar' : 'badge-reading'
+                }">
+                  ${currentQ.section.toUpperCase()}
+                </span>
+                <span class="badge badge-unit">Unit ${currentQ.unit}</span>
+                <span class="topic-exercise-tag">${currentQ.exerciseRef || ''}</span>
               </div>
-              <div style="font-size: 0.8rem; color: var(--text-muted);">
-                (อ่านคำถามและเลือกคำตอบที่ถูกต้องที่สุดตามหลักฐานในบทอ่าน)
+              
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button class="btn btn-sm ${state.exam.flaggedSet.has(currentQ.id) ? 'btn-primary' : 'btn-outline'}" id="btnFlagQuestion">
+                  ${state.exam.flaggedSet.has(currentQ.id) ? '🚩 Flagged' : '🏳️ Flag'}
+                </button>
+                <div class="q-number-pill">ข้อที่ ${state.exam.currentIndex + 1} / ${totalQ}</div>
               </div>
             </div>
-          ` : ''}
 
-          <div class="q-text">${currentQ.question}</div>
+            <!-- If Reading passage question, show passage excerpt/title -->
+            ${currentQ.passageTitle ? `
+              <div class="passage-context-box">
+                <div style="font-weight: 700; color: var(--reading-accent); margin-bottom: 0.25rem;">
+                  📖 ${currentQ.passageTitle}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                  (อ่านคำถามและเลือกคำตอบที่ถูกต้องที่สุดตามหลักฐานในบทอ่าน)
+                </div>
+              </div>
+            ` : ''}
 
-          <!-- 4 Options A-D -->
-          <div class="exam-options-list">
-            ${currentQ.options.map((opt, optIdx) => {
-              const letter = String.fromCharCode(65 + optIdx);
-              let optClass = '';
-              if (currentSelected === optIdx) optClass += ' selected';
+            <div class="q-text" style="white-space: pre-line;">${currentQ.question}</div>
 
-              // Show answers if submitted or in practice mode and answered
-              if (isSubmitted || (isPracticeMode && isCurrentAnswered)) {
-                if (optIdx === currentQ.correctAnswer) {
-                  optClass += ' opt-correct';
-                } else if (currentSelected === optIdx) {
-                  optClass += ' opt-wrong';
+            <!-- 4 Options A-D -->
+            <div class="exam-options-list">
+              ${currentQ.options.map((opt, optIdx) => {
+                const letter = String.fromCharCode(65 + optIdx);
+                const currentSelected = state.exam.userAnswers[currentQ.id];
+                const isCurrentAnswered = currentSelected !== undefined;
+                let optClass = '';
+                if (currentSelected === optIdx) optClass += ' selected';
+
+                if (isSubmitted || (isPracticeMode && isCurrentAnswered)) {
+                  if (optIdx === currentQ.correctAnswer) {
+                    optClass += ' opt-correct';
+                  } else if (currentSelected === optIdx) {
+                    optClass += ' opt-wrong';
+                  }
                 }
-              }
 
+                return `
+                  <div class="exam-option-item ${optClass}" onclick="window.app.selectExamOption('${currentQ.id}', ${optIdx})">
+                    <div class="opt-letter">${letter}</div>
+                    <div style="font-size: 0.95rem; font-weight: 500;">${opt}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Explanation Box -->
+            ${(() => {
+              const currentSelected = state.exam.userAnswers[currentQ.id];
+              const isCurrentAnswered = currentSelected !== undefined;
               return `
-                <div class="exam-option-item ${optClass}" onclick="window.app.selectExamOption('${currentQ.id}', ${optIdx})">
-                  <div class="opt-letter">${letter}</div>
-                  <div style="font-size: 0.95rem; font-weight: 500;">${opt}</div>
+                <div class="explanation-reveal-box ${isSubmitted || (isPracticeMode && isCurrentAnswered) ? 'open' : ''}">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: var(--brand-primary); font-size: 0.95rem;">💡 เฉลยและคำอธิบาย:</strong>
+                    <span class="badge ${currentSelected === currentQ.correctAnswer ? 'badge-vocab' : 'badge-exam'}">
+                      ${currentSelected === currentQ.correctAnswer ? 'ถูกต้อง (+1)' : 'ยังไม่ถูกต้อง'}
+                    </span>
+                  </div>
+                  <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem; line-height: 1.5;">
+                    ${currentQ.explanationThai}
+                  </p>
+                  ${currentQ.signalKeywords ? `
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                      <strong>คำใบ้ / คีย์เวิร์ด:</strong> ${currentQ.signalKeywords}
+                    </div>
+                  ` : ''}
+                  ${currentQ.evidenceSentence ? `
+                    <div style="font-size: 0.8rem; color: var(--reading-accent); margin-top: 0.25rem;">
+                      <strong>หลักฐานในบทความ:</strong> "${currentQ.evidenceSentence}"
+                    </div>
+                  ` : ''}
                 </div>
               `;
-            }).join('')}
-          </div>
+            })()}
 
-          <!-- Explanation Box -->
-          <div class="explanation-reveal-box ${isSubmitted || (isPracticeMode && isCurrentAnswered) ? 'open' : ''}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <strong style="color: var(--brand-primary); font-size: 0.95rem;">💡 เฉลยและคำอธิบาย:</strong>
-              <span class="badge ${currentSelected === currentQ.correctAnswer ? 'badge-vocab' : 'badge-exam'}">
-                ${currentSelected === currentQ.correctAnswer ? 'ถูกต้อง (+1)' : 'ผิด'}
-              </span>
-            </div>
-            <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem; line-height: 1.5;">
-              ${currentQ.explanationThai}
-            </p>
-            ${currentQ.signalKeywords ? `
-              <div style="font-size: 0.8rem; color: var(--text-muted);">
-                <strong>คำใบ้ / คีย์เวิร์ด:</strong> ${currentQ.signalKeywords}
-              </div>
-            ` : ''}
-            ${currentQ.evidenceSentence ? `
-              <div style="font-size: 0.8rem; color: var(--reading-accent); margin-top: 0.25rem;">
-                <strong>หลักฐานในบทความ:</strong> "${currentQ.evidenceSentence}"
-              </div>
-            ` : ''}
-          </div>
-
-          <!-- Next / Prev Nav Buttons -->
-          <div class="q-nav-buttons">
-            <button class="btn btn-outline" id="btnExamPrev" ${state.exam.currentIndex === 0 ? 'disabled' : ''}>
-              ← ข้อก่อนหน้า
-            </button>
-            <div style="display: flex; gap: 0.5rem;">
-              ${!isSubmitted ? `
-                <button class="btn btn-primary" id="btnExamSubmitModal" style="background: var(--exam-accent);">
-                  ส่งข้อสอบ (Submit)
-                </button>
-              ` : `
-                <button class="btn btn-outline" onclick="window.app.retakeExam()">
-                  🔄 ทำข้อสอบใหม่
-                </button>
-              `}
-              <button class="btn btn-primary" id="btnExamNext" ${state.exam.currentIndex === totalQ - 1 ? 'disabled' : ''}>
-                ข้อถัดไป →
+            <!-- Next / Prev Nav Buttons -->
+            <div class="q-nav-buttons">
+              <button class="btn btn-outline" id="btnExamPrev" ${state.exam.currentIndex === 0 ? 'disabled' : ''}>
+                ← ข้อก่อนหน้า
               </button>
+              <div style="display: flex; gap: 0.5rem;">
+                ${!isSubmitted ? `
+                  <button class="btn btn-primary" id="btnExamSubmitModal" style="background: var(--exam-accent);">
+                    ส่งข้อสอบ (Submit)
+                  </button>
+                ` : `
+                  <button class="btn btn-outline" onclick="window.app.retakeExam()">
+                    🔄 ทำข้อสอบใหม่
+                  </button>
+                `}
+                <button class="btn btn-primary" id="btnExamNext" ${state.exam.currentIndex === totalQ - 1 ? 'disabled' : ''}>
+                  ข้อถัดไป →
+                </button>
+              </div>
             </div>
           </div>
+
+          <!-- Right Side: Question Navigator Grid -->
+          <div class="exam-nav-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h4 style="font-size: 1rem;">Question Navigator</h4>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${answeredInScope}/${totalQ} ข้อ</span>
+            </div>
+
+            <div class="nav-grid-40">
+              ${questions.map((q, idx) => {
+                const isAns = state.exam.userAnswers[q.id] !== undefined;
+                const isCur = idx === state.exam.currentIndex;
+                const isFlg = state.exam.flaggedSet.has(q.id);
+
+                let dotClass = '';
+                if (isCur) dotClass += ' current';
+                if (isFlg) dotClass += ' flagged';
+                if (isSubmitted) {
+                  const userChoice = state.exam.userAnswers[q.id];
+                  if (userChoice === q.correctAnswer) dotClass += ' graded-correct';
+                  else dotClass += ' graded-wrong';
+                } else if (isAns) {
+                  dotClass += ' answered';
+                }
+
+                return `
+                  <div class="q-nav-dot ${dotClass}" onclick="window.app.jumpToQuestion(${idx})">
+                    ${idx + 1}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Legend -->
+            <div class="exam-nav-legend">
+              <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> ตอบแล้ว</div>
+              <div class="legend-item"><div class="legend-dot" style="background: var(--bg-tertiary); border: 1px solid var(--border-medium);"></div> ยังไม่ตอบ</div>
+              <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div> ติดธงไว้</div>
+              ${isSubmitted ? `
+                <div class="legend-item"><div class="legend-dot" style="background: var(--vocab-accent);"></div> ถูก</div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> ผิด</div>
+              ` : ''}
+            </div>
+
+            <!-- Submit Button in Navigator -->
+            ${!isSubmitted ? `
+              <button class="btn btn-primary" id="btnExamSubmitNav" style="width: 100%; background: var(--exam-accent);">
+                ส่งข้อสอบและตรวจผล
+              </button>
+            ` : `
+              <button class="btn btn-outline" id="btnFilterWrongOnly" style="width: 100%;">
+                ${state.exam.filterSection === 'wrong' ? 'แสดงทุกข้อ' : 'ฝึกเฉพาะข้อที่ตอบผิด 🎯'}
+              </button>
+            `}
+          </div>
         </div>
-
-        <!-- Right Side: Question Navigator Grid (1 to 40) -->
-        <div class="exam-nav-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h4 style="font-size: 1rem;">Question Navigator</h4>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">${answeredCount}/${totalQ} ข้อ</span>
-          </div>
-
-          <div class="nav-grid-40">
-            ${questions.map((q, idx) => {
-              const isAns = state.exam.userAnswers[q.id] !== undefined;
-              const isCur = idx === state.exam.currentIndex;
-              const isFlg = state.exam.flaggedSet.has(q.id);
-
-              let dotClass = '';
-              if (isCur) dotClass += ' current';
-              if (isFlg) dotClass += ' flagged';
-              if (isSubmitted) {
-                const userChoice = state.exam.userAnswers[q.id];
-                if (userChoice === q.correctAnswer) dotClass += ' graded-correct';
-                else dotClass += ' graded-wrong';
-              } else if (isAns) {
-                dotClass += ' answered';
-              }
-
-              return `
-                <div class="q-nav-dot ${dotClass}" onclick="window.app.jumpToQuestion(${idx})">
-                  ${idx + 1}
-                </div>
-              `;
-            }).join('')}
-          </div>
-
-          <!-- Legend -->
-          <div class="exam-nav-legend">
-            <div class="legend-item"><div class="legend-dot" style="background: var(--brand-primary);"></div> ตอบแล้ว</div>
-            <div class="legend-item"><div class="legend-dot" style="background: var(--bg-tertiary); border: 1px solid var(--border-medium);"></div> ยังไม่ตอบ</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div> ติดธงไว้</div>
-            ${isSubmitted ? `
-              <div class="legend-item"><div class="legend-dot" style="background: var(--vocab-accent);"></div> ถูก</div>
-              <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> ผิด</div>
-            ` : ''}
-          </div>
-
-          <!-- Submit Button in Navigator -->
-          ${!isSubmitted ? `
-            <button class="btn btn-primary" id="btnExamSubmitNav" style="width: 100%; background: var(--exam-accent);">
-              ส่งข้อสอบและตรวจผล
-            </button>
-          ` : `
-            <button class="btn btn-outline" id="btnFilterWrongOnly" style="width: 100%;">
-              ${state.exam.filterSection === 'wrong' ? 'แสดงทุกข้อ' : 'ฝึกเฉพาะข้อที่ตอบผิด 🎯'}
-            </button>
-          `}
-        </div>
-      </div>
+      `}
 
       <!-- Submit Confirmation Modal -->
       <div class="modal-backdrop" id="submitModalBackdrop"></div>
       <div class="vocab-popover-modal" id="submitConfirmModal" style="text-align: center;">
         <h3 style="margin-bottom: 0.5rem; font-size: 1.3rem;">ยืนยันการส่งข้อสอบ?</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
-          คุณตอบข้อสอบไปแล้ว <strong>${answeredCount}</strong> จากทั้งหมด <strong>${totalQ}</strong> ข้อ
-          ${answeredCount < totalQ ? '<br><span style="color: var(--danger);">ยังมีข้อที่ยังไม่ได้ตอบ!</span>' : ''}
+          คุณตอบข้อสอบไปแล้ว <strong>${answeredInScope}</strong> จากทั้งหมด <strong>${totalQ}</strong> ข้อ
+          ${answeredInScope < totalQ ? '<br><span style="color: var(--danger);">ยังมีข้อที่ยังไม่ได้ตอบ!</span>' : ''}
         </p>
         <div style="display: flex; gap: 0.75rem; justify-content: center;">
           <button class="btn btn-outline" onclick="window.app.closeSubmitModal()">กลับไปทำต่อ</button>
@@ -1419,65 +1613,63 @@
         </div>
       </div>
 
-      <!-- Score Result Modal (Shown after submit) -->
+      <!-- Score Result Modal -->
       <div class="modal-backdrop" id="scoreModalBackdrop"></div>
       <div class="score-result-modal vocab-popover-modal" id="scoreResultModal">
-        <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">ผลการทดสอบ CEFR B1–B2</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">การประเมินความพร้อมสอบภาษาอังกฤษ</p>
+        <h2 style="font-size: 1.4rem; margin-bottom: 0.25rem;" id="scoreModalTitle">ผลการทดสอบ CEFR B1–B2</h2>
+        <div id="scoreModalFeedback"></div>
 
         <div class="score-badge-circle">
           <div class="score-number" id="resultScoreNum">0</div>
-          <div class="score-sub" id="resultScoreTotal">/ 40</div>
+          <div class="score-sub" id="resultScoreTotal">/ 0</div>
         </div>
 
-        <div class="section-scores-row">
-          <div class="section-score-box">
-            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Vocabulary</div>
-            <div style="font-size: 1.3rem; font-weight: 800; color: var(--vocab-accent);" id="resScoreVocab">0/15</div>
-          </div>
-          <div class="section-score-box">
-            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Grammar</div>
-            <div style="font-size: 1.3rem; font-weight: 800; color: var(--grammar-accent);" id="resScoreGrammar">0/15</div>
-          </div>
-          <div class="section-score-box">
-            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Reading</div>
-            <div style="font-size: 1.3rem; font-weight: 800; color: var(--reading-accent);" id="resScoreReading">0/10</div>
-          </div>
-        </div>
+        <div class="section-scores-row" id="sectionScoresRow"></div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
           <button class="btn btn-outline" onclick="window.app.closeScoreModal()">ดูเฉลยทีละข้อ</button>
           <button class="btn btn-primary" onclick="window.app.retryWrongAnswers()">ฝึกเฉพาะข้อที่ตอบผิด 🎯</button>
         </div>
       </div>
     `;
 
-    // Start timer if not running
+    // Start timer if not running and not submitted
     if (!state.exam.timerRunning && !isSubmitted) {
       startExamTimer();
     }
 
-    // Hook buttons
-    document.getElementById('btnExamPrev').onclick = () => {
-      if (state.exam.currentIndex > 0) {
-        state.exam.currentIndex--;
-        renderExam();
+    // Hook buttons if questions exist
+    if (totalQ > 0) {
+      const prevBtn = document.getElementById('btnExamPrev');
+      if (prevBtn) {
+        prevBtn.onclick = () => {
+          if (state.exam.currentIndex > 0) {
+            state.exam.currentIndex--;
+            renderExam();
+          }
+        };
       }
-    };
-    document.getElementById('btnExamNext').onclick = () => {
-      if (state.exam.currentIndex < totalQ - 1) {
-        state.exam.currentIndex++;
-        renderExam();
+      const nextBtn = document.getElementById('btnExamNext');
+      if (nextBtn) {
+        nextBtn.onclick = () => {
+          if (state.exam.currentIndex < totalQ - 1) {
+            state.exam.currentIndex++;
+            renderExam();
+          }
+        };
       }
-    };
-    document.getElementById('btnFlagQuestion').onclick = () => {
-      if (state.exam.flaggedSet.has(currentQ.id)) {
-        state.exam.flaggedSet.delete(currentQ.id);
-      } else {
-        state.exam.flaggedSet.add(currentQ.id);
+      const flagBtn = document.getElementById('btnFlagQuestion');
+      if (flagBtn) {
+        flagBtn.onclick = () => {
+          if (state.exam.flaggedSet.has(currentQ.id)) {
+            state.exam.flaggedSet.delete(currentQ.id);
+          } else {
+            state.exam.flaggedSet.add(currentQ.id);
+          }
+          renderExam();
+        };
       }
-      renderExam();
-    };
+    }
 
     const toggleModeBtn = document.getElementById('btnToggleExamMode');
     if (toggleModeBtn) {
@@ -1534,41 +1726,104 @@
     stopExamTimer();
     state.exam.isSubmitted = true;
 
-    // Calculate score
+    const currentQuestions = getExamQuestions();
+    const activeTopic = EXAM_TOPICS.find(t => t.id === state.exam.activeTopicId) || EXAM_TOPICS[0];
+
+    // Calculate score for active questions
     let totalScore = 0;
     let vocabScore = 0;
     let grammarScore = 0;
     let readingScore = 0;
+    let cultureScore = 0;
+    let listeningScore = 0;
 
-    EXAM_DATA.forEach(q => {
+    let vocabTotal = 0;
+    let grammarTotal = 0;
+    let readingTotal = 0;
+    let cultureTotal = 0;
+    let listeningTotal = 0;
+
+    currentQuestions.forEach(q => {
       const userChoice = state.exam.userAnswers[q.id];
-      if (userChoice === q.correctAnswer) {
-        totalScore++;
-        if (q.section === 'vocab') vocabScore++;
-        if (q.section === 'grammar') grammarScore++;
-        if (q.section === 'reading') readingScore++;
-      }
+      const isCorrect = userChoice === q.correctAnswer;
+      if (isCorrect) totalScore++;
+
+      if (q.section === 'vocab') { vocabTotal++; if (isCorrect) vocabScore++; }
+      else if (q.section === 'grammar') { grammarTotal++; if (isCorrect) grammarScore++; }
+      else if (q.section === 'reading') { readingTotal++; if (isCorrect) readingScore++; }
+      else if (q.section === 'culture') { cultureTotal++; if (isCorrect) cultureScore++; }
+      else if (q.section === 'listening') { listeningTotal++; if (isCorrect) listeningScore++; }
     });
+
+    const percent = Math.round((totalScore / (currentQuestions.length || 1)) * 100);
+    let cefrEvaluation = 'CEFR B1 (Good Effort - ควรทบทวนจุดที่ผิด)';
+    if (percent >= 80) cefrEvaluation = 'CEFR B2 (Advanced Mastery - ยอดเยี่ยมมาก!)';
+    else if (percent >= 60) cefrEvaluation = 'CEFR B1+ (Competent - ผ่านเกณฑ์มาตรฐาน)';
 
     // Save exam record
     state.exam.history.push({
       date: new Date().toLocaleDateString('th-TH'),
       time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+      topicTitle: activeTopic.titleEn,
       score: totalScore,
-      total: EXAM_DATA.length,
-      vocabScore,
-      grammarScore,
-      readingScore,
+      total: currentQuestions.length,
+      percent,
       secondsSpent: state.exam.timerSeconds
     });
     saveStorage();
 
     // Show score modal
     document.getElementById('resultScoreNum').textContent = totalScore;
-    document.getElementById('resultScoreTotal').textContent = `/ ${EXAM_DATA.length}`;
-    document.getElementById('resScoreVocab').textContent = `${vocabScore}/15`;
-    document.getElementById('resScoreGrammar').textContent = `${grammarScore}/15`;
-    document.getElementById('resScoreReading').textContent = `${readingScore}/10`;
+    document.getElementById('resultScoreTotal').textContent = `/ ${currentQuestions.length}`;
+    
+    const breakdownContainer = document.getElementById('sectionScoresRow');
+    if (breakdownContainer) {
+      breakdownContainer.innerHTML = `
+        ${vocabTotal > 0 ? `
+          <div class="section-score-box">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Vocabulary</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--vocab-accent);">${vocabScore}/${vocabTotal}</div>
+          </div>
+        ` : ''}
+        ${grammarTotal > 0 ? `
+          <div class="section-score-box">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Grammar</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--grammar-accent);">${grammarScore}/${grammarTotal}</div>
+          </div>
+        ` : ''}
+        ${readingTotal > 0 ? `
+          <div class="section-score-box">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Reading</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--reading-accent);">${readingScore}/${readingTotal}</div>
+          </div>
+        ` : ''}
+        ${cultureTotal > 0 ? `
+          <div class="section-score-box">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Culture Focus</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: #10b981;">${cultureScore}/${cultureTotal}</div>
+          </div>
+        ` : ''}
+        ${listeningTotal > 0 ? `
+          <div class="section-score-box">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Listening & Speaking</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: #ec4899;">${listeningScore}/${listeningTotal}</div>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    const modalTitle = document.getElementById('scoreModalTitle');
+    if (modalTitle) {
+      modalTitle.textContent = `ผลการทดสอบ: ${activeTopic.titleEn}`;
+    }
+
+    const modalFeedback = document.getElementById('scoreModalFeedback');
+    if (modalFeedback) {
+      modalFeedback.innerHTML = `
+        <div style="margin-top: 0.5rem; font-size: 0.95rem; font-weight: 700; color: var(--brand-primary);">${cefrEvaluation}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">ความถูกต้อง ${percent}% (ใช้เวลา ${formatTimer(state.exam.timerSeconds)})</div>
+      `;
+    }
 
     document.getElementById('scoreModalBackdrop').classList.add('open');
     document.getElementById('scoreResultModal').classList.add('open');
@@ -1786,6 +2041,10 @@
     switchCsSection,
     openQuickReview,
     selectExamOption,
+    selectExamUnit,
+    selectExamTopic,
+    startTopicExam,
+    resetExamFilters,
     jumpToQuestion,
     openSubmitModal,
     closeSubmitModal,
