@@ -124,13 +124,17 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Render corresponding views
-    if (tabId === 'dashboard') renderDashboard();
-    if (tabId === 'vocab') renderVocabExplorer();
-    if (tabId === 'grammar') renderGrammarGuide();
-    if (tabId === 'reading') renderReadingPractice();
-    if (tabId === 'cheatsheet') renderCheatSheet();
-    if (tabId === 'exam') renderExam();
-    if (tabId === 'progress') renderProgressReview();
+    try {
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'vocab') renderVocabExplorer();
+      if (tabId === 'grammar') renderGrammarGuide();
+      if (tabId === 'reading') renderReadingPractice();
+      if (tabId === 'cheatsheet') renderCheatSheet();
+      if (tabId === 'exam') renderExam();
+      if (tabId === 'progress') renderProgressReview();
+    } catch (err) {
+      console.error(`Error rendering tab ${tabId}:`, err);
+    }
   }
 
   // ================= 1. DASHBOARD VIEW =================
@@ -1219,7 +1223,7 @@
   }
 
   function getExamQuestions() {
-    let list = EXAM_DATA;
+    let list = (typeof EXAM_DATA !== 'undefined' && Array.isArray(EXAM_DATA)) ? EXAM_DATA : [];
 
     // Filter by topic if a specific topic is selected
     if (state.exam.activeTopicId && state.exam.activeTopicId !== 'all') {
@@ -1241,8 +1245,9 @@
 
   function selectExamUnit(unit) {
     state.exam.activeUnitFilter = unit;
+    const topics = (typeof EXAM_TOPICS !== 'undefined' && Array.isArray(EXAM_TOPICS)) ? EXAM_TOPICS : [];
     if (unit !== 'all') {
-      const topicObj = EXAM_TOPICS.find(t => t.id === state.exam.activeTopicId);
+      const topicObj = topics.find(t => t.id === state.exam.activeTopicId);
       if (!topicObj || topicObj.unit !== Number(unit)) {
         state.exam.activeTopicId = 'all';
       }
@@ -1253,7 +1258,8 @@
 
   function selectExamTopic(topicId) {
     state.exam.activeTopicId = topicId;
-    const topicObj = EXAM_TOPICS.find(t => t.id === topicId);
+    const topics = (typeof EXAM_TOPICS !== 'undefined' && Array.isArray(EXAM_TOPICS)) ? EXAM_TOPICS : [];
+    const topicObj = topics.find(t => t.id === topicId);
     if (topicObj && topicObj.unit !== 'all') {
       state.exam.activeUnitFilter = topicObj.unit;
     }
@@ -1281,27 +1287,55 @@
     const container = document.getElementById('tab-exam');
     if (!container) return;
 
-    const questions = getExamQuestions();
-    const totalQ = questions.length;
-    if (state.exam.currentIndex >= totalQ) {
-      state.exam.currentIndex = Math.max(0, totalQ - 1);
-    }
-    const currentQ = questions[state.exam.currentIndex];
-    
-    // Count answered questions in current scope
-    const answeredInScope = questions.filter(q => state.exam.userAnswers[q.id] !== undefined).length;
-    const isSubmitted = state.exam.isSubmitted;
-    const isPracticeMode = state.exam.mode === 'practice';
+    try {
+      const topics = (typeof EXAM_TOPICS !== 'undefined' && Array.isArray(EXAM_TOPICS)) ? EXAM_TOPICS : [];
+      const questions = getExamQuestions();
+      const totalQ = questions.length;
 
-    // Active Topic Metadata
-    const activeTopicObj = EXAM_TOPICS.find(t => t.id === state.exam.activeTopicId) || EXAM_TOPICS[0];
+      if (topics.length === 0 || (typeof EXAM_DATA === 'undefined')) {
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 2.5rem 1.5rem; margin: 2rem auto; max-width: 600px; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-medium);">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔄</div>
+            <h3 style="margin-bottom: 0.5rem; color: var(--text-main);">กำลังโหลดข้อมูลข้อสอบชุดล่าสุด...</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+              หากหน้าจอนี้ไม่เปลี่ยน กรุณากดปุ่มโหลดใหม่ด้านล่างเพื่ออัปเดตไฟล์ให้เป็นเวอร์ชันปัจจุบัน
+            </p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="window.location.reload(true)">
+                🔄 รีเฟรชโหลดใหม่ (Reload)
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
 
-    // Filter topics for the cards grid based on activeUnitFilter
-    const visibleTopics = EXAM_TOPICS.filter(t => {
-      if (t.id === 'all') return true;
-      if (state.exam.activeUnitFilter === 'all') return true;
-      return t.unit === Number(state.exam.activeUnitFilter);
-    });
+      if (state.exam.currentIndex >= totalQ) {
+        state.exam.currentIndex = Math.max(0, totalQ - 1);
+      }
+      const currentQ = questions[state.exam.currentIndex];
+      
+      // Count answered questions in current scope
+      const answeredInScope = questions.filter(q => state.exam.userAnswers[q.id] !== undefined).length;
+      const isSubmitted = state.exam.isSubmitted;
+      const isPracticeMode = state.exam.mode === 'practice';
+
+      // Active Topic Metadata
+      const activeTopicObj = topics.find(t => t.id === state.exam.activeTopicId) || topics[0] || {
+        id: 'all',
+        titleEn: 'All Units Cumulative Exam',
+        titleTh: 'รวมทุกบท ทุกหัวข้อ (Comprehensive Mock Exam)',
+        icon: '🌟',
+        unit: 'all',
+        exerciseRef: 'Unit 4–6 Ex 1–11'
+      };
+
+      // Filter topics for the cards grid based on activeUnitFilter
+      const visibleTopics = topics.filter(t => {
+        if (t.id === 'all') return true;
+        if (state.exam.activeUnitFilter === 'all') return true;
+        return t.unit === Number(state.exam.activeUnitFilter);
+      });
 
     // Generate topic cards HTML
     const topicCardsHtml = visibleTopics.map(topic => {
@@ -1705,7 +1739,25 @@
         renderExam();
       };
     }
+  } catch (err) {
+    console.error('renderExam error:', err);
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 2.5rem 1.5rem; margin: 2rem auto; max-width: 600px; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-medium);">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+        <h3 style="margin-bottom: 0.5rem; color: var(--text-main);">เกิดข้อผิดพลาดในการโหลดข้อสอบ</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">${err.message || err}</p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="window.location.reload(true)">
+            🔄 รีเฟรชหน้าเว็บ (Reload)
+          </button>
+          <button class="btn btn-outline" onclick="try { localStorage.clear(); } catch(e){} window.location.reload(true);">
+            🧹 รีเซ็ตข้อมูลและโหลดใหม่
+          </button>
+        </div>
+      </div>
+    `;
   }
+}
 
   function selectExamOption(qId, optIdx) {
     if (state.exam.isSubmitted) return; // locked after submission
